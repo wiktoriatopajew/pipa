@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Settings, LogOut, User, MessageCircle } from "lucide-react";
@@ -18,6 +18,37 @@ interface HeaderProps {
 }
 
 export default function Header({ user, onLogin, onLogout, onOpenAdmin }: HeaderProps) {
+  const [location, navigate] = useLocation();
+
+  const handleHomeClick = () => {
+    if (location === '/') {
+      // If already on homepage, scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Navigate to homepage
+      navigate('/');
+    }
+  };
+
+  const handleChatClick = () => {
+    if (location === '/') {
+      // If on homepage, scroll to vehicle selector section
+      const vehicleSection = document.getElementById('vehicle-selector-section');
+      if (vehicleSection) {
+        vehicleSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Navigate to homepage first, then scroll to vehicle selector
+      navigate('/');
+      setTimeout(() => {
+        const vehicleSection = document.getElementById('vehicle-selector-section');
+        if (vehicleSection) {
+          vehicleSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -31,12 +62,20 @@ export default function Header({ user, onLogin, onLogout, onOpenAdmin }: HeaderP
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/" className="text-sm font-medium transition-colors hover:text-primary">
+          <button 
+            onClick={handleHomeClick} 
+            className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
+            data-testid="nav-home"
+          >
             Home
-          </Link>
-          <Link href="/chat" className="text-sm font-medium transition-colors hover:text-primary">
+          </button>
+          <button 
+            onClick={handleChatClick} 
+            className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
+            data-testid="nav-chat"
+          >
             Chat
-          </Link>
+          </button>
           <Link href="/contact" className="text-sm font-medium transition-colors hover:text-primary">
             Contact
           </Link>
