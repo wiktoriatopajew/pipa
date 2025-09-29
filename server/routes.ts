@@ -660,41 +660,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DEPRECATED: Use /api/verify-payment-and-subscribe instead
+  // This endpoint is disabled to prevent payment bypass
   app.post("/api/subscriptions", requireAuth, async (req, res) => {
-    try {
-      if (!req.session?.userId) {
-        return res.status(401).json({ error: "Authentication required" });
-      }
-      
-      // Validate request body
-      const result = subscriptionRequestSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          error: "Invalid subscription data", 
-          details: result.error.issues 
-        });
-      }
-      
-      const { amount } = result.data;
-      
-      // Set expiry date to 30 days from now
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
-      
-      const subscription = await storage.createSubscription({
-        userId: req.session.userId, // Use userId from session, not client input
-        amount: amount.toString(),
-        status: "active",
-        expiresAt
-      });
-      
-      // Update user hasSubscription flag
-      await storage.updateUser(req.session.userId, { hasSubscription: true });
-      
-      res.json(subscription);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create subscription" });
-    }
+    res.status(410).json({ 
+      error: "This endpoint is deprecated. Use /api/verify-payment-and-subscribe instead." 
+    });
   });
 
   // Protected Chat Endpoints for Users (require authentication and subscription)

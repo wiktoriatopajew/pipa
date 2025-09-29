@@ -50,8 +50,11 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Payment Processing
-- **Stripe Integration**: Full payment processing with React Stripe.js components for secure checkout
-- **Payment Modal**: Custom payment form with card validation and processing simulation
+- **Dual Payment Options**: Users can choose between Stripe (credit/debit cards) and PayPal for $9.99 subscription payments
+- **Stripe Integration**: Server-side PaymentIntent creation with automatic payment methods, secure verification before subscription activation
+- **PayPal Integration**: PayPal SDK integration with server-side order capture and verification flow
+- **Payment Security**: All payments verified server-side with hardcoded amounts (no client-side price manipulation), currency validation, and duplicate subscription prevention
+- **Payment Modal**: Multi-step payment flow with payment method selection, secure checkout forms, and account creation after successful payment
 
 ### Database Services
 - **Neon Database**: Serverless PostgreSQL hosting with connection pooling
@@ -82,6 +85,16 @@ Preferred communication style: Simple, everyday language.
 - **Support Contact**: Standardized support email (support@chatwithmechanic.com) across all pages
 
 ## Recent Changes
+
+### Dual Payment Integration (September 29, 2025)
+- **Payment Methods**: Implemented dual payment options allowing users to choose between Stripe (credit/debit cards) and PayPal
+- **Stripe Security**: Server-side PaymentIntent creation with hardcoded $9.99 amount, automatic payment methods, currency validation (USD), and payment verification before subscription creation
+- **PayPal Integration**: Full PayPal SDK integration with server-side order creation and capture flow via blueprint
+- **Payment Verification Endpoint**: New `/api/verify-payment-and-subscribe` endpoint that verifies payment server-side (checking status, amount, currency) before creating subscription
+- **Security Fixes**: Removed client-side price manipulation vulnerabilities, deprecated insecure `/api/subscriptions` endpoint (returns 410 Gone), added duplicate subscription prevention
+- **PaymentModal Updates**: Complete rewrite to support real Stripe payments with Elements, PayPal button integration, payment method selection, and secure payment flow
+- **Error Handling**: Optional Stripe/PayPal support - app gracefully handles missing API keys without crashing
+- **Known Limitations**: Stripe.js may fail to load in Replit environment due to CSP restrictions; PayPal verification has blueprint constraints (cannot modify paypal.ts)
 
 ### SEO Pages Implementation (September 2025)
 - **Added 9 SEO-optimized pages**: 5 vehicle type pages and 4 support pages
