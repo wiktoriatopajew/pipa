@@ -86,7 +86,9 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
 
   // Initialize Stripe from global window.Stripe
   useEffect(() => {
-    const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    // Hardcode the public key temporarily to fix the issue
+    const stripePublicKey = "pk_test_51NSmbFEqdkqBXQdX4uoBQAu2Y0Uk8RyulN1hXl8iJnMv3w6MVHUvy3T8usJoJNkZ6QB9AtwJtm0IgTZo5muaDFuC00Zc2YiOWp";
+    
     if (stripePublicKey && (window as any).Stripe) {
       const stripe = (window as any).Stripe(stripePublicKey);
       setStripeInstance(stripe);

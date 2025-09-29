@@ -115,6 +115,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await capturePaypalOrder(req, res);
   });
 
+  // Get Stripe public key for frontend
+  app.get("/api/stripe-config", (req, res) => {
+    const publicKey = process.env.VITE_STRIPE_PUBLIC_KEY;
+    if (!publicKey) {
+      return res.status(503).json({ error: "Stripe not configured" });
+    }
+    res.json({ publicKey });
+  });
+
   // Stripe payment route - reference: blueprint:javascript_stripe
   app.post("/api/create-payment-intent", async (req, res) => {
     try {
