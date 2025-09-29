@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Wrench, Clock, Shield, Star } from "lucide-react";
-import heroImage from "@assets/generated_images/Futuristic_automotive_garage_workshop_a4093373.png";
+import heroImage from "@assets/stock_images/mechanic_garage_work_4757d5e8.jpg";
 
 interface HeroSectionProps {
   onStartChat?: () => void;
@@ -16,7 +16,7 @@ export default function HeroSection({ onStartChat, onGetStarted }: HeroSectionPr
       <div className="absolute inset-0 z-0">
         <img 
           src={heroImage} 
-          alt="Futuristic automotive garage" 
+          alt="Traditional automotive garage workshop" 
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/80 to-background/70" />

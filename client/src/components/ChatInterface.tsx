@@ -7,6 +7,123 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, Clock, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Function to generate vehicle-specific diagnostic questions
+const getDiagnosticQuestions = (vehicleInfo: any): string => {
+  const vehicleType = vehicleInfo.type;
+  const issue = vehicleInfo.issue?.toLowerCase() || '';
+  
+  const commonQuestions = [
+    "When did this problem first start occurring?",
+    "Does it happen all the time or only under certain conditions?",
+    "Have you noticed any unusual sounds, smells, or vibrations?"
+  ];
+  
+  let specificQuestions: string[] = [];
+  
+  // Vehicle type specific questions
+  switch (vehicleType) {
+    case 'car':
+    case 'truck':
+      if (issue.includes('engine') || issue.includes('start')) {
+        specificQuestions = [
+          "Does the engine turn over when you try to start it?",
+          "Are there any dashboard warning lights on?",
+          "When was your last oil change or maintenance?"
+        ];
+      } else if (issue.includes('brake')) {
+        specificQuestions = [
+          "Do you hear squealing or grinding noises when braking?",
+          "Does the brake pedal feel soft or spongy?",
+          "Is the vehicle pulling to one side when braking?"
+        ];
+      } else {
+        specificQuestions = [
+          "What is your current mileage?",
+          "Have you performed any recent maintenance?",
+          "Are any warning lights illuminated on the dashboard?"
+        ];
+      }
+      break;
+      
+    case 'motorcycle':
+      specificQuestions = [
+        "What type of motorcycle (cruiser, sport, touring, etc.)?",
+        "Does the issue occur at idle, while riding, or both?",
+        "How many miles are on the odometer?"
+      ];
+      break;
+      
+    case 'boat':
+      specificQuestions = [
+        "What type of engine (outboard, inboard, sterndrive)?",
+        "Does the problem occur in or out of water?",
+        "How many hours are on the engine?"
+      ];
+      break;
+      
+    case 'construction':
+      specificQuestions = [
+        "What type of equipment (excavator, bulldozer, loader, etc.)?",
+        "Does the issue affect hydraulics, engine, or other systems?",
+        "How many operating hours are on the machine?"
+      ];
+      break;
+      
+    default:
+      specificQuestions = [
+        "Can you provide more details about the type of vehicle?",
+        "What systems or components are affected?",
+        "Is this a recurring issue or the first time?"
+      ];
+  }
+  
+  const allQuestions = [...specificQuestions, ...commonQuestions];
+  const selectedQuestions = allQuestions.slice(0, 3); // Pick top 3 most relevant
+  
+  return `To help diagnose your ${vehicleType}, I need to gather some additional information:\n\n${selectedQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}\n\nPlease answer these questions, and I'll connect you with the most suitable mechanic for your specific issue.`;
+};
+
+// Function to generate intelligent responses based on user answers
+const generateIntelligentResponse = (userInput: string, vehicleInfo: any, messageCount: number): string => {
+  const input = userInput.toLowerCase();
+  const vehicleType = vehicleInfo.type;
+  
+  // After several exchanges, transition to human mechanic
+  if (messageCount > 4) {
+    return `Thank you for providing those details. Based on your ${vehicleType} and the symptoms you've described, I'm now connecting you with Mike, one of our senior mechanics who specializes in ${vehicleType} issues. He'll be able to provide you with specific repair steps and cost estimates. Mike will be with you in just a moment!`;
+  }
+  
+  // Analyze user responses and provide relevant follow-up
+  if (input.includes('yes') || input.includes('no')) {
+    return `Thanks for that information. Can you tell me more about any specific symptoms? For example, any unusual noises, warning lights, or performance changes you've noticed?`;
+  }
+  
+  if (input.includes('noise') || input.includes('sound')) {
+    return `Noise issues can tell us a lot! Can you describe the noise more specifically? Is it a grinding, squealing, clicking, or rattling sound? And does it happen when the vehicle is idling, moving, or during specific actions like braking or turning?`;
+  }
+  
+  if (input.includes('light') || input.includes('warning')) {
+    return `Warning lights are important indicators. Which specific lights are on? If it's the check engine light, this usually indicates an emissions or engine management issue. Other lights like oil pressure, brake, or battery lights indicate more urgent problems.`;
+  }
+  
+  if (input.includes('start') || input.includes('turn over')) {
+    return `Starting issues can have several causes. When you turn the key, do you hear clicking sounds, does the engine crank slowly, or is there complete silence? Also, are your headlights and dashboard lights working normally?`;
+  }
+  
+  if (input.includes('vibrat') || input.includes('shake')) {
+    return `Vibrations can indicate various issues depending on when they occur. Do you feel the vibration through the steering wheel, seat, or pedals? Does it happen while idling, accelerating, braking, or at highway speeds?`;
+  }
+  
+  // Default intelligent response
+  const responses = [
+    `I see. Based on what you're telling me about your ${vehicleType}, let me ask you this: Have you noticed if the problem is getting worse over time, or does it seem to stay the same?`,
+    `That's helpful information. For your ${vehicleType}, when exactly do you notice this issue most? Is it during cold starts, after the engine warms up, or throughout your drive?`,
+    `Good details. One more thing - have you had any recent maintenance done on your ${vehicleType}? Sometimes issues can be related to recent work or indicate it's time for scheduled maintenance.`
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
 interface Message {
   id: string;
   content: string;
@@ -17,28 +134,64 @@ interface Message {
 
 interface ChatInterfaceProps {
   hasAccess?: boolean;
+  vehicleInfo?: any;
   onUpgrade?: () => void;
   className?: string;
 }
 
-export default function ChatInterface({ hasAccess = false, onUpgrade, className }: ChatInterfaceProps) {
+export default function ChatInterface({ hasAccess = false, vehicleInfo, onUpgrade, className }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initial bot greeting
+  // Initial bot greeting with vehicle-specific information
   useEffect(() => {
+    let content = "";
+    
+    if (vehicleInfo) {
+      const vehicleDescription = `${vehicleInfo.year || ''} ${vehicleInfo.make || ''} ${vehicleInfo.model || ''}`.trim();
+      const vehicleType = vehicleInfo.type || 'vehicle';
+      
+      if (hasAccess) {
+        content = `Hello! I see you're having issues with your ${vehicleDescription ? vehicleDescription : vehicleType}. `;
+        content += `You mentioned: "${vehicleInfo.issue}". I'm your AI automotive assistant and I'll help gather some diagnostic information before connecting you with a professional mechanic. `;
+        content += `Let me ask you a few specific questions to better understand the problem.`;
+      } else {
+        content = `Hi! I can see you're having trouble with your ${vehicleDescription ? vehicleDescription : vehicleType}. `;
+        content += `I can provide some basic guidance about your issue: "${vehicleInfo.issue}". `;
+        content += `For detailed diagnosis and direct access to professional mechanics, upgrade for just $9.99.`;
+      }
+    } else {
+      content = hasAccess 
+        ? "Hello! I'm your automotive assistant. You now have access to chat with professional mechanics. How can I help you today?"
+        : "Hi there! I'm an AI assistant that can help with basic automotive questions. For detailed diagnosis and expert advice, you'll need to upgrade to chat with our professional mechanics for just $9.99.";
+    }
+
     const initialMessage: Message = {
       id: "1",
-      content: hasAccess 
-        ? "Hello! I'm your automotive assistant. You now have access to chat with professional mechanics. How can I help you today?"
-        : "Hi there! I'm an AI assistant that can help with basic automotive questions. For detailed diagnosis and expert advice, you'll need to upgrade to chat with our professional mechanics for just $9.99.",
+      content,
       sender: "bot",
       timestamp: new Date()
     };
     setMessages([initialMessage]);
-  }, [hasAccess]);
+    
+    // If user has access and vehicle info, ask follow-up diagnostic questions
+    if (hasAccess && vehicleInfo) {
+      setTimeout(() => {
+        const diagnosticQuestions = getDiagnosticQuestions(vehicleInfo);
+        if (diagnosticQuestions) {
+          const followUpMessage: Message = {
+            id: "2",
+            content: diagnosticQuestions,
+            sender: "bot",
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, followUpMessage]);
+        }
+      }, 2000);
+    }
+  }, [hasAccess, vehicleInfo]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -61,12 +214,31 @@ export default function ChatInterface({ hasAccess = false, onUpgrade, className 
 
     // Simulate bot thinking delay
     setTimeout(() => {
+      let responseContent = "";
+      let sender: "bot" | "mechanic" = "bot";
+      
+      if (hasAccess) {
+        // For premium users, provide intelligent responses and eventually connect to mechanic
+        if (vehicleInfo) {
+          responseContent = generateIntelligentResponse(inputValue, vehicleInfo, messages.length);
+          sender = messages.length > 4 ? "mechanic" : "bot"; // Switch to mechanic after several exchanges
+        } else {
+          responseContent = "Let me connect you with one of our expert mechanics who can help with your specific issue. They'll be with you shortly!";
+          sender = "mechanic";
+        }
+      } else {
+        // For free users, provide basic guidance and encourage upgrade
+        if (vehicleInfo) {
+          responseContent = `Based on your ${vehicleInfo.type} issue, I can suggest checking basic things like fluids, belts, or connections. However, for a detailed diagnosis and step-by-step repair guidance from certified mechanics, I'd recommend upgrading for just $9.99.`;
+        } else {
+          responseContent = "I can provide some general guidance, but for a detailed diagnosis and professional advice, I'd recommend upgrading to chat with our certified mechanics. They can provide specific solutions for your vehicle.";
+        }
+      }
+      
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: hasAccess 
-          ? "Let me connect you with one of our expert mechanics who can help with your specific issue. They'll be with you shortly!"
-          : "I can provide some general guidance, but for a detailed diagnosis and professional advice, I'd recommend upgrading to chat with our certified mechanics. They can provide specific solutions for your vehicle.",
-        sender: hasAccess ? "mechanic" : "bot",
+        content: responseContent,
+        sender,
         timestamp: new Date()
       };
       

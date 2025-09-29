@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Car, Bike, Ship, Bus, Truck, Hammer } from "lucide-react";
+import { Car, Bike, Ship, Bus, Truck, Hammer, MoreHorizontal } from "lucide-react";
 
 const VEHICLE_TYPES = [
   { id: "car", name: "Car", icon: Car },
@@ -14,6 +14,7 @@ const VEHICLE_TYPES = [
   { id: "bus", name: "Bus", icon: Bus },
   { id: "truck", name: "Truck", icon: Truck },
   { id: "construction", name: "Construction Equipment", icon: Hammer },
+  { id: "other", name: "Other", icon: MoreHorizontal },
 ];
 
 interface VehicleInfo {
@@ -116,7 +117,7 @@ export default function VehicleSelector({ onSubmit, className }: VehicleSelector
                     <SelectValue placeholder="Select year" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                    {Array.from({ length: new Date().getFullYear() - 1970 + 1 }, (_, i) => new Date().getFullYear() - i).map(year => (
                       <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                     ))}
                   </SelectContent>

@@ -14,6 +14,7 @@ export default function Home() {
   const [showPayment, setShowPayment] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [vehicleInfo, setVehicleInfo] = useState<any>(null);
 
   // Mock login function
   const handleLogin = () => {
@@ -43,6 +44,7 @@ export default function Home() {
 
   const handleVehicleSubmit = (info: any) => {
     console.log('Vehicle info submitted:', info);
+    setVehicleInfo(info);
     handleStartChat();
   };
 
@@ -56,6 +58,7 @@ export default function Home() {
             <div className="lg:col-span-2">
               <ChatInterface 
                 hasAccess={hasAccess}
+                vehicleInfo={vehicleInfo}
                 onUpgrade={() => setShowPayment(true)}
                 className="h-[600px]"
               />
