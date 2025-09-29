@@ -465,6 +465,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update online status
       await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
 
+      // Send login notification email
+      try {
+        await sendUserLoginNotification(user.username, user.email || 'unknown@email.com');
+        console.log('Login notification sent for user:', user.username);
+      } catch (emailError) {
+        console.error('Failed to send login notification:', emailError);
+      }
+
       // Regenerate session to prevent session fixation
       req.session.regenerate((err: any) => {
         if (err) {
