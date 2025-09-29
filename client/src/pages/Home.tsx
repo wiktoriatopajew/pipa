@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import OnlineMechanics from "@/components/OnlineMechanics";
@@ -10,24 +13,45 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
-  const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null);
   const [showPayment, setShowPayment] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [vehicleInfo, setVehicleInfo] = useState<any>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Mock login function
-  const handleLogin = () => {
-    console.log('Login triggered');
-    setUser({ id: 'user-123', name: 'John Doe', email: 'john@example.com' });
-  };
+  // Check if user is authenticated
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ['/api/users/me'],
+    retry: false, // Don't retry if not authenticated
+    refetchOnWindowFocus: false,
+  });
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/users/logout"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
+      setShowChat(false);
+      toast({
+        title: "Wylogowano pomyślnie",
+        description: "Do zobaczenia wkrótce!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Błąd wylogowania",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleLogout = () => {
-    console.log('Logout triggered');
-    setUser(null);
-    setHasAccess(false);
+    logoutMutation.mutate();
   };
+
+  // Check if user has active subscription
+  const hasAccess = user?.hasSubscription || false;
 
   const handleStartChat = () => {
     if (!hasAccess) {
@@ -39,8 +63,8 @@ export default function Home() {
 
   const handlePaymentSuccess = (userData: { id: string; name: string; email: string; sessionId: string }) => {
     console.log('Payment successful!', userData);
-    setUser(userData);
-    setHasAccess(true);
+    // Refresh user data to get updated subscription status
+    queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
     setSessionId(userData.sessionId);
     setShowChat(true);
   };
@@ -54,7 +78,7 @@ export default function Home() {
   if (showChat) {
     return (
       <div className="min-h-screen bg-background">
-        <Header user={user} onLogin={handleLogin} onLogout={handleLogout} />
+        <Header user={user} onLogin={() => {}} onLogout={handleLogout} />
         
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-6">
@@ -63,7 +87,6 @@ export default function Home() {
                 hasAccess={hasAccess}
                 vehicleInfo={vehicleInfo}
                 sessionId={sessionId || ''}
-                userId={user?.id || ''}
                 className="h-[600px]"
               />
             </div>
@@ -103,7 +126,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogin={handleLogin} onLogout={handleLogout} />
+      <Header user={user} onLogin={() => {}} onLogout={handleLogout} />
       
       <HeroSection 
         onStartChat={handleStartChat}

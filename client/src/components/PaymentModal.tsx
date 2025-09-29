@@ -41,16 +41,14 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
         const userResponse = await apiRequest("POST", "/api/users/register", accountData);
         const user = await userResponse.json();
         
-        // Create subscription (30 days)
+        // Create subscription (30 days) - backend uses session.userId
         const subscriptionResponse = await apiRequest("POST", "/api/subscriptions", {
-          userId: user.id,
           amount: "9.99"
         });
         await subscriptionResponse.json();
         
-        // Create chat session
+        // Create chat session - backend uses session.userId  
         const sessionResponse = await apiRequest("POST", "/api/chat/sessions", {
-          userId: user.id,
           vehicleInfo: {}
         });
         const session = await sessionResponse.json();

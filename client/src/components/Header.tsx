@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
-  user?: { name: string; email: string; avatar?: string } | null;
+  user?: { username: string; email: string; avatar?: string } | null;
   onLogin?: () => void;
   onLogout?: () => void;
   onOpenAdmin?: () => void;
@@ -48,8 +48,8 @@ export default function Header({ user, onLogin, onLogout, onOpenAdmin }: HeaderP
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full" data-testid="button-user-menu">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={user.avatar} alt={user.username} />
+                    <AvatarFallback>{user.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
