@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PayPalButton from "@/components/PayPalButton";
+import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 interface PaymentModalProps {
   open: boolean;
@@ -18,16 +20,78 @@ interface PaymentModalProps {
   onPaymentSuccess?: (user: { id: string; name: string; email: string; sessionId: string }) => void;
 }
 
+// Stripe Checkout Form Component - reference: blueprint:javascript_stripe
+function StripeCheckoutForm({ onSuccess, email }: { onSuccess: (paymentIntentId: string) => void, email: string }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.origin,
+        receipt_email: email,
+      },
+      redirect: "if_required",
+    });
+
+    setIsProcessing(false);
+
+    if (error) {
+      toast({
+        title: "Payment Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else if (paymentIntent && paymentIntent.id) {
+      toast({
+        title: "Payment successful!",
+        description: "Now create your account",
+      });
+      onSuccess(paymentIntent.id);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement />
+      <Button
+        type="submit"
+        disabled={!stripe || isProcessing}
+        className="w-full"
+        data-testid="button-pay"
+      >
+        {isProcessing ? "Processing..." : "Pay $9.99"}
+      </Button>
+    </form>
+  );
+}
+
 export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: PaymentModalProps) {
   const [step, setStep] = useState("payment");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal">("card");
-  
-  // Payment form fields
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
   const [email, setEmail] = useState("");
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [paymentId, setPaymentId] = useState<string>("");
+
+  // Initialize Stripe - reference: blueprint:javascript_stripe
+  useEffect(() => {
+    const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    if (stripePublicKey) {
+      setStripePromise(loadStripe(stripePublicKey));
+    }
+  }, []);
   
   // Account setup fields
   const [username, setUsername] = useState("");
@@ -36,18 +100,24 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
   
   const { toast } = useToast();
 
-  // Create user and subscription mutation
+  // Create user and subscription mutation with payment verification
   const createAccountMutation = useMutation({
-    mutationFn: async (accountData: { username: string; email: string; password: string }) => {
+    mutationFn: async (accountData: { username: string; email: string; password: string; paymentId: string; paymentMethod: string }) => {
       try {
         // Create user account
-        const userResponse = await apiRequest("POST", "/api/users/register", accountData);
+        const userResponse = await apiRequest("POST", "/api/users/register", {
+          username: accountData.username,
+          email: accountData.email,
+          password: accountData.password
+        });
         const user = await userResponse.json();
         
-        // Create subscription (30 days) - backend uses session.userId
-        const subscriptionResponse = await apiRequest("POST", "/api/subscriptions", {
-          amount: "9.99"
-        });
+        // Verify payment and create subscription - SECURE
+        const verifyPayload = accountData.paymentMethod === "stripe" 
+          ? { paymentIntentId: accountData.paymentId, paymentMethod: "stripe" }
+          : { paypalOrderId: accountData.paymentId, paymentMethod: "paypal" };
+          
+        const subscriptionResponse = await apiRequest("POST", "/api/verify-payment-and-subscribe", verifyPayload);
         await subscriptionResponse.json();
         
         // Create chat session - backend uses session.userId  
@@ -91,32 +161,36 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
     },
   });
 
-  const handlePayment = async () => {
-    if (!email || !cardNumber || !expiryDate || !cvv) {
-      toast({
-        title: "Fill all fields",
-        description: "All fields are required",
-        variant: "destructive",
-      });
-      return;
+  // Fetch Stripe client secret when card payment is selected and email is provided
+  useEffect(() => {
+    if (paymentMethod === "card" && email && step === "payment" && open) {
+      apiRequest("POST", "/api/create-payment-intent", { amount: 9.99 })
+        .then((res) => res.json())
+        .then((data) => {
+          setClientSecret(data.clientSecret);
+        })
+        .catch((error) => {
+          console.error("Failed to create payment intent:", error);
+          toast({
+            title: "Error",
+            description: "Failed to initialize payment. Please try again.",
+            variant: "destructive",
+          });
+        });
     }
+  }, [paymentMethod, email, step, open]);
 
-    setIsProcessing(true);
-    
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
+  const handleStripeSuccess = (paymentIntentId: string) => {
+    setPaymentId(paymentIntentId);
     setStep("account");
-    
-    toast({
-      title: "Payment successful!",
-      description: "Now create your account",
-    });
   };
 
   const handlePayPalSuccess = (data: any) => {
     console.log("PayPal payment successful:", data);
+    
+    // Extract order ID from PayPal response
+    const orderId = data?.id || data?.orderID || "";
+    setPaymentId(orderId);
     
     toast({
       title: "Payment successful!",
@@ -164,46 +238,33 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
       return;
     }
 
+    if (!paymentId) {
+      toast({
+        title: "Payment error",
+        description: "Payment ID not found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     createAccountMutation.mutate({
       username,
       email,
-      password
+      password,
+      paymentId,
+      paymentMethod
     });
   };
 
   const resetModal = () => {
     setStep("payment");
     setPaymentMethod("card");
-    setCardNumber("");
-    setExpiryDate("");
-    setCvv("");
+    setClientSecret("");
     setEmail("");
     setUsername("");
     setPassword("");
     setConfirmPassword("");
-  };
-
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
-
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\D/g, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
+    setPaymentId("");
   };
 
   return (
@@ -311,55 +372,29 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
                 />
               </div>
               
-              {/* Credit Card Form */}
-              {paymentMethod === "card" && (
-                <>
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                      maxLength={19}
-                      data-testid="input-card-number"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="expiryDate">Expiry Date</Label>
-                      <Input
-                        id="expiryDate"
-                        placeholder="MM/YY"
-                        value={expiryDate}
-                        onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
-                        maxLength={5}
-                        data-testid="input-expiry"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        value={cvv}
-                        onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').substring(0, 3))}
-                        maxLength={3}
-                        data-testid="input-cvv"
-                      />
-                    </div>
-                  </div>
+              {/* Stripe Credit Card Form */}
+              {paymentMethod === "card" && email && !stripePromise && (
+                <div className="p-4 border rounded-lg bg-destructive/10 border-destructive/20">
+                  <p className="text-sm text-destructive">
+                    Stripe is not configured. Please add VITE_STRIPE_PUBLIC_KEY to your environment.
+                  </p>
+                </div>
+              )}
 
-                  <Button 
-                    onClick={handlePayment}
-                    disabled={isProcessing}
-                    className="w-full"
-                    data-testid="button-pay"
-                  >
-                    {isProcessing ? "Processing..." : "Pay $9.99"}
-                  </Button>
-                </>
+              {paymentMethod === "card" && email && stripePromise && clientSecret && (
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <StripeCheckoutForm onSuccess={handleStripeSuccess} email={email} />
+                </Elements>
+              )}
+
+              {paymentMethod === "card" && email && stripePromise && !clientSecret && (
+                <div className="flex items-center justify-center p-4">
+                  <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
+                </div>
+              )}
+
+              {paymentMethod === "card" && !email && (
+                <p className="text-sm text-muted-foreground">Please enter your email address first</p>
               )}
 
               {/* PayPal Form */}
