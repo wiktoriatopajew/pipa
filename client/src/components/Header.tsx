@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
-  user?: { username: string; email: string; avatar?: string } | null;
+  user?: { username: string; email: string; avatar?: string; isAdmin?: boolean } | null;
   onLogin?: () => void;
   onLogout?: () => void;
   onOpenAdmin?: () => void;
@@ -97,13 +97,17 @@ export default function Header({ user, onLogin, onLogout, onOpenAdmin }: HeaderP
                   <User className="mr-2 h-4 w-4" />
                   {user.email}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild data-testid="button-admin">
-                  <Link href="/admin" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Admin Panel
-                  </Link>
-                </DropdownMenuItem>
+                {user.isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild data-testid="button-admin">
+                      <Link href="/admin" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onLogout} data-testid="button-logout">
                   <LogOut className="mr-2 h-4 w-4" />
