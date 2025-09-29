@@ -88,8 +88,13 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
+    
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(insertUser.password, 12);
+    
     const user: User = { 
       ...insertUser,
+      password: hashedPassword,
       email: insertUser.email || null,
       id,
       isAdmin: false,

@@ -10,16 +10,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [vehicleInfo, setVehicleInfo] = useState<any>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Mock login function
   const handleLogin = () => {
     console.log('Login triggered');
-    setUser({ name: 'John Doe', email: 'john@example.com' });
+    setUser({ id: 'user-123', name: 'John Doe', email: 'john@example.com' });
   };
 
   const handleLogout = () => {
@@ -36,9 +37,11 @@ export default function Home() {
     }
   };
 
-  const handlePaymentSuccess = () => {
-    console.log('Payment successful!');
+  const handlePaymentSuccess = (userData: { id: string; name: string; email: string; sessionId: string }) => {
+    console.log('Payment successful!', userData);
+    setUser(userData);
     setHasAccess(true);
+    setSessionId(userData.sessionId);
     setShowChat(true);
   };
 
@@ -59,7 +62,8 @@ export default function Home() {
               <ChatInterface 
                 hasAccess={hasAccess}
                 vehicleInfo={vehicleInfo}
-                onUpgrade={() => setShowPayment(true)}
+                sessionId={sessionId || ''}
+                userId={user?.id || ''}
                 className="h-[600px]"
               />
             </div>

@@ -1,12 +1,25 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertSubscriptionSchema, insertChatSessionSchema, insertMessageSchema } from "@shared/schema";
+import { insertSubscriptionSchema, insertChatSessionSchema, insertMessageSchema, insertUserSchema } from "@shared/schema";
+import { z } from "zod";
 
-// Extend Express Request type to include session
+// Validation schemas
+const loginSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(1, "Password required")
+});
+
+const subscriptionRequestSchema = z.object({
+  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid amount format")
+});
+
+// Extend Express Request type to include session and user data
 declare module 'express-serve-static-core' {
   interface Request {
     session: any;
+    user?: any;
+    subscription?: any;
   }
 }
 
@@ -14,11 +27,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Authentication
   app.post("/api/admin/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ error: "Email and password required" });
+      // Validate request body
+      const result = loginSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          error: "Invalid login data", 
+          details: result.error.issues 
+        });
       }
+      
+      const { email, password } = result.data;
 
       const user = await storage.verifyPassword(email, password);
       
@@ -29,17 +47,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update online status
       await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
 
-      // Store admin session
-      req.session.adminId = user.id;
-      req.session.isAdmin = true;
+      // Regenerate session to prevent session fixation
+      req.session.regenerate((err: any) => {
+        if (err) {
+          return res.status(500).json({ error: "Session regeneration failed" });
+        }
+        
+        // Store admin session
+        req.session.adminId = user.id;
+        req.session.isAdmin = true;
 
-      res.json({ 
-        success: true, 
-        admin: { 
-          id: user.id, 
-          email: user.email, 
-          username: user.username 
-        } 
+        res.json({ 
+          success: true, 
+          admin: { 
+            id: user.id, 
+            email: user.email, 
+            username: user.username 
+          } 
+        });
       });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -246,10 +271,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public endpoints for client app
+  // User middleware to check authentication and subscription
+  const requireUser = async (req: Request, res: Response, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    const user = await storage.getUser(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+    
+    // Check if user has active subscription
+    const subscriptions = await storage.getUserSubscriptions(user.id);
+    const activeSubscription = subscriptions.find(sub => 
+      sub.status === "active" && 
+      sub.expiresAt && 
+      new Date(sub.expiresAt) > new Date()
+    );
+    
+    if (!activeSubscription) {
+      return res.status(403).json({ error: "Active subscription required" });
+    }
+    
+    req.user = user;
+    req.subscription = activeSubscription;
+    next();
+  };
+
+  // User Authentication endpoints
   app.post("/api/users/register", async (req, res) => {
     try {
-      const { username, email, password } = req.body;
+      // Validate request body
+      const result = insertUserSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          error: "Invalid user data", 
+          details: result.error.issues 
+        });
+      }
+      
+      const { username, email, password } = result.data;
       
       // Check if user exists
       const existingUser = await storage.getUserByEmail(email || "");
@@ -258,21 +320,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser({ username, email, password });
-      res.json({ id: user.id, username: user.username, email: user.email });
+      
+      // Regenerate session to prevent session fixation and auto-login
+      req.session.regenerate((err: any) => {
+        if (err) {
+          return res.status(500).json({ error: "Session regeneration failed" });
+        }
+        
+        req.session.userId = user.id;
+        req.session.isUser = true;
+        
+        res.json({ 
+          id: user.id, 
+          username: user.username, 
+          email: user.email,
+          hasSubscription: user.hasSubscription 
+        });
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to create user" });
     }
   });
 
+  app.post("/api/users/login", async (req, res) => {
+    try {
+      // Validate request body
+      const result = loginSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          error: "Invalid login data", 
+          details: result.error.issues 
+        });
+      }
+      
+      const { email, password } = result.data;
+
+      const user = await storage.verifyPassword(email, password);
+      
+      if (!user || user.isAdmin) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      // Update online status
+      await storage.updateUser(user.id, { isOnline: true, lastSeen: new Date() });
+
+      // Regenerate session to prevent session fixation
+      req.session.regenerate((err: any) => {
+        if (err) {
+          return res.status(500).json({ error: "Session regeneration failed" });
+        }
+        
+        // Store user session
+        req.session.userId = user.id;
+        req.session.isUser = true;
+
+        res.json({ 
+          success: true, 
+          user: { 
+            id: user.id, 
+            email: user.email, 
+            username: user.username,
+            hasSubscription: user.hasSubscription
+          } 
+        });
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/users/logout", async (req, res) => {
+    if (req.session.userId) {
+      await storage.updateUser(req.session.userId, { isOnline: false });
+    }
+    req.session.destroy((err: any) => {
+      if (err) {
+        return res.status(500).json({ error: "Failed to logout" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  app.get("/api/users/me", async (req, res) => {
+    try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      // Check subscription status
+      const subscriptions = await storage.getUserSubscriptions(user.id);
+      const activeSubscription = subscriptions.find(sub => 
+        sub.status === "active" && 
+        sub.expiresAt && 
+        new Date(sub.expiresAt) > new Date()
+      );
+
+      res.json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        hasSubscription: !!activeSubscription,
+        subscription: activeSubscription || null
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user data" });
+    }
+  });
+
   app.post("/api/subscriptions", async (req, res) => {
     try {
-      const { userId, amount } = req.body;
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // Validate request body
+      const result = subscriptionRequestSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          error: "Invalid subscription data", 
+          details: result.error.issues 
+        });
+      }
+      
+      const { amount } = result.data;
+      
+      // Set expiry date to 30 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
       
       const subscription = await storage.createSubscription({
-        userId,
+        userId: req.session.userId, // Use userId from session, not client input
         amount: amount.toString(),
-        status: "active"
+        status: "active",
+        expiresAt
       });
+      
+      // Update user hasSubscription flag
+      await storage.updateUser(req.session.userId, { hasSubscription: true });
       
       res.json(subscription);
     } catch (error) {
@@ -280,15 +469,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public Chat Endpoints for Users
-  app.post("/api/chat/sessions", async (req, res) => {
+  // Protected Chat Endpoints for Users (require authentication and subscription)
+  app.post("/api/chat/sessions", requireUser, async (req, res) => {
     try {
-      const { userId, vehicleType, issue } = req.body;
+      const { vehicleInfo } = req.body;
       
       const session = await storage.createChatSession({
-        userId,
-        vehicleType: vehicleType || "Car",
-        issue: issue || "General inquiry",
+        userId: req.user.id, // Use authenticated user ID from session
+        vehicleInfo: JSON.stringify(vehicleInfo || {}),
         status: "active"
       });
       
@@ -298,20 +486,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/chat/sessions/:sessionId/messages", async (req, res) => {
+  app.get("/api/chat/sessions/:sessionId/messages", requireUser, async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const { userId, content, sender } = req.body;
       
-      if (!content || !sender) {
-        return res.status(400).json({ error: "Content and sender required" });
+      // Verify user owns this session
+      const session = await storage.getChatSession(sessionId);
+      if (!session || session.userId !== req.user.id) {
+        return res.status(403).json({ error: "Access denied to this chat session" });
+      }
+      
+      const messages = await storage.getSessionMessages(sessionId);
+      
+      // Enrich with sender data
+      const enrichedMessages = await Promise.all(
+        messages.map(async (message) => {
+          const sender = message.senderId ? await storage.getUser(message.senderId) : null;
+          return {
+            ...message,
+            sender
+          };
+        })
+      );
+      
+      res.json(enrichedMessages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.post("/api/chat/sessions/:sessionId/messages", requireUser, async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ error: "Content required" });
+      }
+      
+      // Verify user owns this session
+      const session = await storage.getChatSession(sessionId);
+      if (!session || session.userId !== req.user.id) {
+        return res.status(403).json({ error: "Access denied to this chat session" });
       }
       
       const message = await storage.createMessage({
         sessionId,
-        userId: userId || null,
+        senderId: req.user.id, // Use authenticated user ID from session
+        senderType: "user", // Always "user" for authenticated user messages
         content,
-        sender,
         isRead: false
       });
       
@@ -321,16 +544,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User heartbeat for online status
-  app.post("/api/users/heartbeat", async (req, res) => {
+  // User heartbeat for online status (protected)
+  app.post("/api/users/heartbeat", requireUser, async (req, res) => {
     try {
-      const { userId } = req.body;
-      
-      if (!userId) {
-        return res.status(400).json({ error: "User ID required" });
-      }
-      
-      const updatedUser = await storage.updateUser(userId, { 
+      const updatedUser = await storage.updateUser(req.user.id, { 
         isOnline: true, 
         lastSeen: new Date() 
       });
