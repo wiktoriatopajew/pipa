@@ -580,34 +580,32 @@ export default function AdminPanel() {
                               }`}
                             >
                               <div
-                                className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg space-y-1 ${
                                   message.senderType === "admin"
-                                    ? "bg-primary text-primary-foreground"
-                                    : message.senderType === "user"
-                                    ? "bg-muted"
-                                    : "bg-success/20 text-success-foreground border border-success/30"
+                                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                                    : "bg-gradient-to-r from-purple-600 to-purple-700 text-white"
                                 }`}
                               >
-                                <div className="flex items-center space-x-2 mb-1">
-                                  {message.senderType === "admin" ? (
-                                    <Badge variant="secondary" className="text-xs">
-                                      Admin
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-xs font-medium">
-                                      {message.sender?.username || "Użytkownik"}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm">{message.content}</p>
-                                <div className="flex items-center justify-between mt-1">
-                                  <span className="text-xs opacity-70">
+                                <div className="flex items-center space-x-2">
+                                  <Avatar className="w-6 h-6">
+                                    <AvatarFallback className="text-xs bg-white/20 text-white">
+                                      {message.senderType === "admin" ? "A" : (message.sender?.username?.charAt(0).toUpperCase() || "U")}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-xs font-medium">
+                                    {message.senderType === "admin" ? "Admin" : (message.sender?.username || "User")}
+                                  </span>
+                                  <span className="text-xs opacity-70 ml-auto">
                                     {formatDate(message.createdAt)}
                                   </span>
-                                  {message.senderType === "user" && !message.isRead && (
-                                    <AlertCircle className="w-3 h-3 ml-2 text-warning" />
-                                  )}
                                 </div>
+                                <p className="text-sm">{message.content}</p>
+                                {message.senderType === "user" && !message.isRead && (
+                                  <div className="flex items-center text-xs opacity-80">
+                                    <AlertCircle className="w-3 h-3 mr-1" />
+                                    Unread
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))}

@@ -175,6 +175,7 @@ export default function Home() {
                 vehicleInfo={vehicleInfo}
                 sessionId={sessionId || ''}
                 userId={(user as any)?.id || ''}
+                username={(user as any)?.username || ''}
                 className="h-[600px]"
               />
             </div>

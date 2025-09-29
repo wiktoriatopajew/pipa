@@ -31,6 +31,7 @@ interface ChatInterfaceProps {
   vehicleInfo?: any;
   sessionId: string;
   userId: string;
+  username?: string;
   className?: string;
 }
 
@@ -39,6 +40,7 @@ export default function ChatInterface({
   vehicleInfo, 
   sessionId,
   userId,
+  username,
   className 
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState("");
@@ -278,7 +280,21 @@ export default function ChatInterface({
   return (
     <Card className={cn("h-full flex flex-col", className)}>
       <CardContent className="flex-1 flex flex-col p-0">
-        <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+        {/* Vehicle Info Header */}
+        {vehicleInfo && (
+          <div className="border-b p-4 bg-muted/30">
+            <div className="text-sm">
+              <span className="font-medium">Vehicle:</span> {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
+              {vehicleInfo.type && <span className="ml-2 text-muted-foreground">({vehicleInfo.type})</span>}
+            </div>
+            {vehicleInfo.problem && (
+              <div className="text-sm mt-1">
+                <span className="font-medium">Issue:</span> {vehicleInfo.problem}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <div className="space-y-2">
@@ -299,20 +315,20 @@ export default function ChatInterface({
                   className={cn(
                     "max-w-[80%] rounded-lg px-4 py-2 space-y-1",
                     message.sender === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                      ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white"
+                      : "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
                   )}
                 >
                   <div className="flex items-center space-x-2">
                     <Avatar className="w-6 h-6">
-                      <AvatarFallback className="text-xs">
-                        {message.sender === "user" ? "You" : "M"}
+                      <AvatarFallback className="text-xs bg-white/20 text-white">
+                        {message.sender === "user" ? (username?.charAt(0).toUpperCase() || "U") : "M"}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-xs opacity-70">
-                      {message.sender === "user" ? "You" : "Mechanic"}
+                    <span className="text-xs font-medium">
+                      {message.sender === "user" ? (username || "User") : "Mechanic"}
                     </span>
-                    <span className="text-xs opacity-50 flex items-center">
+                    <span className="text-xs opacity-70 flex items-center ml-auto">
                       <Clock className="w-3 h-3 mr-1" />
                       {formatTimestamp(message.timestamp)}
                     </span>
