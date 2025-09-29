@@ -113,6 +113,23 @@ export default function ChatInterface({
     },
   });
 
+  // Play notification sound for new admin messages
+  const prevMessagesCount = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > prevMessagesCount.current) {
+      const newMessages = messages.slice(prevMessagesCount.current);
+      const hasAdminMessage = newMessages.some(msg => msg.sender === "admin");
+      
+      if (hasAdminMessage) {
+        // Play notification sound
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGmm98OScTgwOUKfk77RgGgU7k9r0yHMpBSh+zPLaizsKGGS56+mmUBELTKXh8bllHAU2jdXz0n0uBSqAzvLajDkIGGe88eyeUQ0PUqjl8LJeGQQ8lNv0yHUpBSh+zPDciz0KF2S56+mjUhEKS6Xg8bllHAU3jtb00oA');
+        audio.volume = 0.3;
+        audio.play().catch(err => console.log('Audio play failed:', err));
+      }
+    }
+    prevMessagesCount.current = messages.length;
+  }, [messages]);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
