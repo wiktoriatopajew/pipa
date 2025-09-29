@@ -506,7 +506,10 @@ export default function AdminPanel() {
                               </div>
                               <div className="flex items-center space-x-2">
                                 {session.user?.isOnline && (
-                                  <div className="w-2 h-2 bg-success rounded-full" />
+                                  <Badge variant="default" className="text-xs">
+                                    <div className="w-2 h-2 bg-white rounded-full mr-1" />
+                                    Online
+                                  </Badge>
                                 )}
                                 {session.unreadCount > 0 && (
                                   <Badge variant="destructive" className="h-5 w-5 p-0 text-xs">
