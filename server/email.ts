@@ -123,3 +123,40 @@ export async function sendSubsequentMessageNotification(
     console.error('Failed to send subsequent message notification:', error);
   }
 }
+
+export async function sendChatActivityNotification(
+  username: string,
+  email: string,
+  sessionId: string,
+  messageCount: number,
+  durationMinutes: number
+) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('Skipping email: SMTP not configured');
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: NOTIFICATION_EMAIL,
+      subject: `🔔 Chat Active ${durationMinutes}min - ${username}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #0EA5E9;">Chat Activity Alert</h2>
+          <p><strong>${username}</strong> (${email}) is still chatting:</p>
+          <ul>
+            <li><strong>Duration:</strong> ${durationMinutes} minutes</li>
+            <li><strong>Messages sent:</strong> ${messageCount}</li>
+            <li><strong>Session ID:</strong> ${sessionId}</li>
+            <li><strong>Time:</strong> ${new Date().toLocaleString()}</li>
+          </ul>
+          <p style="color: #64748b;">This is a periodic notification sent every 15 minutes while the chat is active.</p>
+        </div>
+      `,
+    });
+    console.log(`Chat activity notification sent (${durationMinutes}min)`);
+  } catch (error) {
+    console.error('Failed to send chat activity notification:', error);
+  }
+}

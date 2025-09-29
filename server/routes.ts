@@ -7,7 +7,7 @@ import rateLimit from "express-rate-limit";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { sendUserLoginNotification, sendFirstMessageNotification, sendSubsequentMessageNotification } from "./email";
+import { sendUserLoginNotification, sendFirstMessageNotification, sendChatActivityNotification } from "./email";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal-wrapper";
 import Stripe from "stripe";
 
@@ -18,6 +18,10 @@ if (process.env.STRIPE_SECRET_KEY) {
     apiVersion: "2025-08-27.basil",
   });
 }
+
+// Track last notification time for each session (for 15-minute alerts)
+const sessionNotificationTimestamps: Map<string, number> = new Map();
+const NOTIFICATION_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
 // Validation schemas
 const loginSchema = z.object({
@@ -799,35 +803,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isRead: false
       });
       
-      // Send email notifications if this is the first message
-      if (isFirstMessage) {
-        try {
+      // Send email notifications
+      try {
+        const messageCount = userMessages.length + 1;
+        const now = Date.now();
+        const lastNotification = sessionNotificationTimestamps.get(sessionId) || 0;
+        const timeSinceLastNotification = now - lastNotification;
+        
+        if (isFirstMessage) {
+          // First message - send immediate notification
           await sendFirstMessageNotification(
             req.user.username,
             req.user.email || 'unknown@email.com',
             content,
             sessionId
           );
+          sessionNotificationTimestamps.set(sessionId, now);
           console.log('Email notification sent for first message from user:', req.user.username);
-        } catch (emailError) {
-          // Log error but don't fail the message creation
-          console.error('Failed to send email notification:', emailError);
-        }
-      } else {
-        // Send subsequent message notification
-        try {
-          const messageCount = userMessages.length + 1;
-          await sendSubsequentMessageNotification(
+        } else if (timeSinceLastNotification >= NOTIFICATION_INTERVAL_MS) {
+          // 15 minutes passed - send activity notification
+          const sessionStartTime = session.createdAt ? new Date(session.createdAt).getTime() : now;
+          const durationMinutes = Math.round((now - sessionStartTime) / (1000 * 60));
+          
+          await sendChatActivityNotification(
             req.user.username,
             req.user.email || 'unknown@email.com',
-            content,
             sessionId,
-            messageCount
+            messageCount,
+            durationMinutes
           );
-          console.log(`Email notification sent for message #${messageCount} from user:`, req.user.username);
-        } catch (emailError) {
-          console.error('Failed to send email notification:', emailError);
+          sessionNotificationTimestamps.set(sessionId, now);
+          console.log(`Chat activity notification sent (${durationMinutes}min) for user:`, req.user.username);
         }
+      } catch (emailError) {
+        // Log error but don't fail the message creation
+        console.error('Failed to send email notification:', emailError);
       }
       
       res.json(message);
