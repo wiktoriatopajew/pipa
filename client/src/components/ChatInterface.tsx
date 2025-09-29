@@ -47,6 +47,7 @@ export default function ChatInterface({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -68,6 +69,8 @@ export default function ChatInterface({
     onSuccess: () => {
       setInputValue("");
       refetchMessages();
+      // Keep focus on input after sending
+      setTimeout(() => inputRef.current?.focus(), 100);
     },
     onError: () => {
       toast({
@@ -146,6 +149,13 @@ export default function ChatInterface({
       sendMessage();
     }
   };
+
+  // Focus input on mount
+  useEffect(() => {
+    if (hasAccess) {
+      inputRef.current?.focus();
+    }
+  }, [hasAccess]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -277,10 +287,10 @@ export default function ChatInterface({
 
   return (
     <Card className={cn("h-full flex flex-col", className)}>
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         {/* Vehicle Info Header */}
         {vehicleInfo && (
-          <div className="border-b p-4 bg-muted/30">
+          <div className="border-b p-4 bg-muted/30 flex-shrink-0">
             <div className="text-sm">
               <span className="font-medium">Vehicle:</span> {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
               {vehicleInfo.type && <span className="ml-2 text-muted-foreground">({vehicleInfo.type})</span>}
@@ -292,7 +302,7 @@ export default function ChatInterface({
             )}
           </div>
         )}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <div className="space-y-2">
@@ -344,7 +354,7 @@ export default function ChatInterface({
           <div ref={messagesEndRef} />
         </div>
         
-        <div className="border-t bg-background p-4">
+        <div className="border-t bg-background p-4 flex-shrink-0">
           <input
             ref={fileInputRef}
             type="file"
@@ -365,6 +375,7 @@ export default function ChatInterface({
               <Paperclip className="w-4 h-4" />
             </Button>
             <Input
+              ref={inputRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
