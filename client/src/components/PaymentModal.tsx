@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Shield, Clock, CheckCircle, Star, User, Key } from "lucide-react";
+import { SiPaypal } from "react-icons/si";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import PayPalButton from "@/components/PayPalButton";
 
 interface PaymentModalProps {
   open: boolean;
@@ -19,6 +21,7 @@ interface PaymentModalProps {
 export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: PaymentModalProps) {
   const [step, setStep] = useState("payment");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal">("card");
   
   // Payment form fields
   const [cardNumber, setCardNumber] = useState("");
@@ -112,6 +115,27 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
     });
   };
 
+  const handlePayPalSuccess = (data: any) => {
+    console.log("PayPal payment successful:", data);
+    
+    toast({
+      title: "Payment successful!",
+      description: "Now create your account",
+    });
+    
+    setStep("account");
+  };
+
+  const handlePayPalError = (error: any) => {
+    console.error("PayPal payment error:", error);
+    
+    toast({
+      title: "Payment failed",
+      description: "Please try again or use a different payment method",
+      variant: "destructive",
+    });
+  };
+
   const handleAccountSetup = () => {
     if (!username || !password || !confirmPassword) {
       toast({
@@ -149,6 +173,7 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
 
   const resetModal = () => {
     setStep("payment");
+    setPaymentMethod("card");
     setCardNumber("");
     setExpiryDate("");
     setCvv("");
