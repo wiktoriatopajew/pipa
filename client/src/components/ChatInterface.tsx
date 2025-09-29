@@ -21,8 +21,8 @@ interface Attachment {
 interface Message {
   id: string;
   content: string;
-  sender: "user" | "admin";
-  timestamp: Date;
+  senderType: "user" | "admin";
+  createdAt: string;
   attachments?: Attachment[];
 }
 
@@ -61,9 +61,7 @@ export default function ChatInterface({
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       const response = await apiRequest("POST", `/api/chat/sessions/${sessionId}/messages`, {
-        userId,
-        content,
-        sender: "user"
+        content
       });
       return response.json();
     },
@@ -120,7 +118,7 @@ export default function ChatInterface({
   useEffect(() => {
     if (messages.length > prevMessagesCount.current) {
       const newMessages = messages.slice(prevMessagesCount.current);
-      const hasAdminMessage = newMessages.some(msg => msg.sender === "admin");
+      const hasAdminMessage = newMessages.some(msg => msg.senderType === "admin");
       
       if (hasAdminMessage) {
         // Play notification sound
@@ -246,8 +244,8 @@ export default function ChatInterface({
     );
   };
 
-  const formatTimestamp = (timestamp: Date) => {
-    return new Date(timestamp).toLocaleTimeString("en-US", { 
+  const formatTimestamp = (createdAt: string) => {
+    return new Date(createdAt).toLocaleTimeString("en-US", { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
@@ -308,13 +306,13 @@ export default function ChatInterface({
                 key={message.id}
                 className={cn(
                   "flex",
-                  message.sender === "user" ? "justify-end" : "justify-start"
+                  message.senderType === "user" ? "justify-end" : "justify-start"
                 )}
               >
                 <div
                   className={cn(
                     "max-w-[80%] rounded-lg px-4 py-2 space-y-1",
-                    message.sender === "user"
+                    message.senderType === "user"
                       ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white"
                       : "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
                   )}
@@ -322,15 +320,15 @@ export default function ChatInterface({
                   <div className="flex items-center space-x-2">
                     <Avatar className="w-6 h-6">
                       <AvatarFallback className="text-xs bg-white/20 text-white">
-                        {message.sender === "user" ? (username?.charAt(0).toUpperCase() || "U") : "M"}
+                        {message.senderType === "user" ? (username?.charAt(0).toUpperCase() || "U") : "M"}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-xs font-medium">
-                      {message.sender === "user" ? (username || "User") : "Mechanic"}
+                      {message.senderType === "user" ? (username || "User") : "Mechanic"}
                     </span>
                     <span className="text-xs opacity-70 flex items-center ml-auto">
                       <Clock className="w-3 h-3 mr-1" />
-                      {formatTimestamp(message.timestamp)}
+                      {formatTimestamp(message.createdAt)}
                     </span>
                   </div>
                   <p className="text-sm">{message.content}</p>

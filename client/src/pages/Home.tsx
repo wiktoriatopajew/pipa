@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import OnlineMechanics from "@/components/OnlineMechanics";
@@ -83,6 +84,9 @@ export default function Home() {
 
   // Check if user has active subscription
   const hasAccess = (user as any)?.hasSubscription || false;
+
+  // Update online status with heartbeat
+  useOnlineStatus(!!user);
 
   const handleStartChat = () => {
     if (!hasAccess) {
