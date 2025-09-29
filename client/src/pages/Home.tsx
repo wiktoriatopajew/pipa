@@ -8,6 +8,7 @@ import HeroSection from "@/components/HeroSection";
 import OnlineMechanics from "@/components/OnlineMechanics";
 import VehicleSelector from "@/components/VehicleSelector";
 import ChatInterface from "@/components/ChatInterface";
+import ChatHistory from "@/components/ChatHistory";
 import PaymentModal from "@/components/PaymentModal";
 import LoginModal from "@/components/LoginModal";
 import Footer from "@/components/Footer";
@@ -103,6 +104,22 @@ export default function Home() {
     handleStartChat();
   };
 
+  const handleSelectSession = async (selectedSessionId: string, selectedVehicleInfo: any) => {
+    console.log('Selected chat session:', selectedSessionId);
+    setSessionId(selectedSessionId);
+    setVehicleInfo(selectedVehicleInfo);
+    setShowChat(true);
+  };
+
+  const handleStartNewChat = () => {
+    setSessionId(null);
+    setVehicleInfo(null);
+    const vehicleSection = document.getElementById('vehicle-selector-section');
+    if (vehicleSection) {
+      vehicleSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   if (showChat) {
     return (
       <div className="min-h-screen bg-background">
@@ -161,6 +178,25 @@ export default function Home() {
         onStartChat={handleScrollToVehicleSelector}
         onGetStarted={handleLearnMore}
       />
+      
+      {/* Chat History section for logged-in users */}
+      {user && (user as any)?.id && (
+        <section className="py-16 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <ChatHistory
+                  onSelectSession={handleSelectSession}
+                  onStartNewChat={handleStartNewChat}
+                />
+              </div>
+              <div>
+                <OnlineMechanics />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
       
       <section id="vehicle-selector-section" className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
