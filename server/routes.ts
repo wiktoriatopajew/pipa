@@ -500,18 +500,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check subscription status
       const subscriptions = await storage.getUserSubscriptions(user.id);
+      const now = new Date();
       const activeSubscription = subscriptions.find(sub => 
         sub.status === "active" && 
         sub.expiresAt && 
-        new Date(sub.expiresAt) > new Date()
+        new Date(sub.expiresAt) > now
       );
+
+      // Calculate days remaining
+      let subscriptionDaysLeft = 0;
+      if (activeSubscription?.expiresAt) {
+        const expiresAt = new Date(activeSubscription.expiresAt);
+        const diffMs = expiresAt.getTime() - now.getTime();
+        subscriptionDaysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      }
 
       res.json({
         id: user.id,
         username: user.username,
         email: user.email,
+        isAdmin: user.isAdmin || false,
         hasSubscription: !!activeSubscription,
-        subscription: activeSubscription || null
+        subscription: activeSubscription || null,
+        subscriptionDaysLeft
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch user data" });
@@ -583,12 +594,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const messages = await storage.getSessionMessages(session.id);
           const lastMessage = messages[messages.length - 1];
           
-          // Compute the actual last activity time
-          const computedLastActivity = new Date(Math.max(
-            new Date(session.lastActivity || session.createdAt).getTime(),
-            lastMessage ? new Date(lastMessage.createdAt).getTime() : 0,
-            new Date(session.createdAt).getTime()
-          ));
+          // Compute the actual last activity time with safe timestamp conversions
+          const sessionLastActivity = session.lastActivity ? new Date(session.lastActivity).getTime() : 0;
+          const sessionCreated = session.createdAt ? new Date(session.createdAt).getTime() : 0;
+          const messageCreated = lastMessage?.createdAt ? new Date(lastMessage.createdAt).getTime() : 0;
+          
+          const computedLastActivity = new Date(Math.max(sessionLastActivity, messageCreated, sessionCreated) || Date.now());
 
           // Count unread messages from non-user senders
           const unreadCount = messages.filter(msg => 

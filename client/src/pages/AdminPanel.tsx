@@ -421,10 +421,10 @@ export default function AdminPanel() {
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center space-x-2">
                               <span className="text-sm font-medium">
-                                {message.sender?.username || "Nieznany"}
+                                {message.senderType === "admin" ? "Mechanic" : (message.sender?.username || "Użytkownik")}
                               </span>
                               <Badge variant={message.senderType === "admin" ? "default" : "secondary"}>
-                                {message.senderType}
+                                {message.senderType === "admin" ? "Admin" : "User"}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
                                 {formatDate(message.createdAt)}

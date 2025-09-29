@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, User, Clock, Shield, Paperclip, Image, Video, FileText } from "lucide-react";
+import { Send, Clock, Shield, Paperclip, Image, Video, FileText } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -277,27 +277,6 @@ export default function ChatInterface({
 
   return (
     <Card className={cn("h-full flex flex-col", className)}>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span>Chat with Mechanic</span>
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-sm text-muted-foreground">Admin online</span>
-            </div>
-          </div>
-          <Badge variant="default">Premium</Badge>
-        </CardTitle>
-        {vehicleInfo && (
-          <div className="text-sm text-muted-foreground">
-            Vehicle: {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model} ({vehicleInfo.type})
-            {vehicleInfo.issue && (
-              <div className="mt-1">Issue: {vehicleInfo.issue}</div>
-            )}
-          </div>
-        )}
-      </CardHeader>
-      
       <CardContent className="flex-1 flex flex-col p-0">
         <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
           {messages.length === 0 ? (

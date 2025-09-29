@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
-  user?: { username: string; email: string; avatar?: string; isAdmin?: boolean } | null;
+  user?: { username: string; email: string; avatar?: string; isAdmin?: boolean; subscriptionDaysLeft?: number } | null;
   onLogin?: () => void;
   onLogout?: () => void;
   onOpenAdmin?: () => void;
@@ -97,6 +97,14 @@ export default function Header({ user, onLogin, onLogout, onOpenAdmin }: HeaderP
                   <User className="mr-2 h-4 w-4" />
                   {user.email}
                 </DropdownMenuItem>
+                {user.subscriptionDaysLeft !== undefined && (
+                  <DropdownMenuItem className="flex items-center justify-between" data-testid="text-subscription-days">
+                    <span className="text-sm text-muted-foreground">Subscription</span>
+                    <span className={`text-sm font-medium ${user.subscriptionDaysLeft > 7 ? 'text-success' : user.subscriptionDaysLeft > 0 ? 'text-warning' : 'text-destructive'}`}>
+                      {user.subscriptionDaysLeft > 0 ? `${user.subscriptionDaysLeft} days left` : 'Expired'}
+                    </span>
+                  </DropdownMenuItem>
+                )}
                 {user.isAdmin && (
                   <>
                     <DropdownMenuSeparator />
