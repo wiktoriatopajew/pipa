@@ -51,7 +51,7 @@ export default function Home() {
   };
 
   // Check if user has active subscription
-  const hasAccess = user?.hasSubscription || false;
+  const hasAccess = (user as any)?.hasSubscription || false;
 
   const handleStartChat = () => {
     if (!hasAccess) {
@@ -78,7 +78,7 @@ export default function Home() {
   if (showChat) {
     return (
       <div className="min-h-screen bg-background">
-        <Header user={user} onLogin={() => {}} onLogout={handleLogout} />
+        <Header user={user as any} onLogin={() => {}} onLogout={handleLogout} />
         
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-6">
@@ -87,6 +87,7 @@ export default function Home() {
                 hasAccess={hasAccess}
                 vehicleInfo={vehicleInfo}
                 sessionId={sessionId || ''}
+                userId={(user as any)?.id || ''}
                 className="h-[600px]"
               />
             </div>
@@ -126,7 +127,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogin={() => {}} onLogout={handleLogout} />
+      <Header user={user as any} onLogin={() => {}} onLogout={handleLogout} />
       
       <HeroSection 
         onStartChat={handleStartChat}

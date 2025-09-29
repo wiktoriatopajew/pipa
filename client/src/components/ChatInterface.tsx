@@ -4,17 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, User, Clock, Shield } from "lucide-react";
+import { Send, User, Clock, Shield, Paperclip, Image, Video, FileText } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+interface Attachment {
+  id: string;
+  fileName: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
+}
 
 interface Message {
   id: string;
   content: string;
   sender: "user" | "admin";
   timestamp: Date;
+  attachments?: Attachment[];
 }
 
 interface ChatInterfaceProps {
@@ -33,7 +42,9 @@ export default function ChatInterface({
   className 
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -67,6 +78,41 @@ export default function ChatInterface({
     },
   });
 
+  // File upload mutation
+  const uploadFileMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch(`/api/chat/sessions/${sessionId}/upload`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      refetchMessages();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "File upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -82,6 +128,103 @@ export default function ChatInterface({
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file type
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Only images and videos are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file size
+    const isImage = file.type.startsWith('image/');
+    const maxSize = isImage ? 30 * 1024 * 1024 : 150 * 1024 * 1024; // 30MB for images, 150MB for videos
+    
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: `Maximum size is ${isImage ? '30MB' : '150MB'} for ${isImage ? 'images' : 'videos'}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    uploadFileMutation.mutate(file);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <Image className="w-4 h-4" />;
+    if (mimeType.startsWith('video/')) return <Video className="w-4 h-4" />;
+    return <FileText className="w-4 h-4" />;
+  };
+
+  const renderAttachment = (attachment: Attachment) => {
+    const isImage = attachment.mimeType.startsWith('image/');
+    const isVideo = attachment.mimeType.startsWith('video/');
+
+    if (isImage) {
+      return (
+        <div className="mt-2">
+          <img 
+            src={`/api/uploads/${attachment.fileName}`}
+            alt={attachment.originalName}
+            className="max-w-xs rounded-lg border"
+            style={{ maxHeight: '200px' }}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            {attachment.originalName} ({formatFileSize(attachment.fileSize)})
+          </p>
+        </div>
+      );
+    }
+
+    if (isVideo) {
+      return (
+        <div className="mt-2">
+          <video 
+            src={`/api/uploads/${attachment.fileName}`}
+            controls
+            className="max-w-xs rounded-lg border"
+            style={{ maxHeight: '200px' }}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            {attachment.originalName} ({formatFileSize(attachment.fileSize)})
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-2 p-2 border rounded-lg flex items-center space-x-2">
+        {getFileIcon(attachment.mimeType)}
+        <div className="flex-1">
+          <p className="text-sm font-medium">{attachment.originalName}</p>
+          <p className="text-xs text-muted-foreground">{formatFileSize(attachment.fileSize)}</p>
+        </div>
+      </div>
+    );
   };
 
   const formatTimestamp = (timestamp: Date) => {
@@ -179,6 +322,11 @@ export default function ChatInterface({
                     </span>
                   </div>
                   <p className="text-sm">{message.content}</p>
+                  {message.attachments && message.attachments.map((attachment) => (
+                    <div key={attachment.id}>
+                      {renderAttachment(attachment)}
+                    </div>
+                  ))}
                 </div>
               </div>
             ))
@@ -187,7 +335,25 @@ export default function ChatInterface({
         </div>
         
         <div className="border-t bg-background p-4">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleFileSelect}
+            className="hidden"
+            data-testid="input-file-upload"
+          />
           <div className="flex space-x-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadFileMutation.isPending}
+              data-testid="button-file-upload"
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -206,6 +372,11 @@ export default function ChatInterface({
               <Send className="w-4 h-4" />
             </Button>
           </div>
+          {uploadFileMutation.isPending && (
+            <div className="mt-2 text-sm text-muted-foreground">
+              Uploading file...
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

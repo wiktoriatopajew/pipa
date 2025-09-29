@@ -1,9 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertSubscriptionSchema, insertChatSessionSchema, insertMessageSchema, insertUserSchema } from "@shared/schema";
+import { insertSubscriptionSchema, insertChatSessionSchema, insertMessageSchema, insertUserSchema, insertAttachmentSchema } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -13,6 +16,45 @@ const loginSchema = z.object({
 
 const subscriptionRequestSchema = z.object({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid amount format")
+});
+
+// File upload configuration
+const storage_multer = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = 'uploads/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+const fileFilter = (req: any, file: any, cb: any) => {
+  const allowedMimeTypes = [
+    // Images
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+    // Videos
+    'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/avi'
+  ];
+  
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only images and videos are allowed.'), false);
+  }
+};
+
+const upload = multer({
+  storage: storage_multer,
+  fileFilter,
+  limits: {
+    fileSize: 150 * 1024 * 1024, // 150MB max
+  },
 });
 
 // Utility function to sanitize user objects
@@ -218,13 +260,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const messages = await storage.getSessionMessages(sessionId);
       
-      // Enrich with sender data (sanitized)
+      // Enrich with sender data and attachments (sanitized)
       const enrichedMessages = await Promise.all(
         messages.map(async (message) => {
           const sender = message.senderId ? await storage.getUser(message.senderId) : null;
+          const attachments = await storage.getMessageAttachments(message.id);
+          
           return {
             ...message,
-            sender: toPublicUser(sender)
+            sender: toPublicUser(sender),
+            attachments: attachments
           };
         })
       );
@@ -296,6 +341,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch live data" });
     }
   });
+
+  // Auth middleware to check authentication only (for subscription creation)
+  const requireAuth = async (req: Request, res: Response, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    const user = await storage.getUser(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+    
+    req.user = user;
+    next();
+  };
 
   // User middleware to check authentication and subscription
   const requireUser = async (req: Request, res: Response, next: any) => {
@@ -458,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/subscriptions", requireAdmin, async (req, res) => {
+  app.post("/api/subscriptions", requireAuth, async (req, res) => {
     try {
       if (!req.session?.userId) {
         return res.status(401).json({ error: "Authentication required" });
@@ -567,6 +627,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(message);
     } catch (error) {
       res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Get messages for chat session (user endpoint)
+  app.get("/api/chat/sessions/:sessionId/messages", requireUser, async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      // Verify user owns this session
+      const session = await storage.getChatSession(sessionId);
+      if (!session || session.userId !== req.user.id) {
+        return res.status(403).json({ error: "Access denied to this chat session" });
+      }
+      
+      const messages = await storage.getSessionMessages(sessionId);
+      
+      // Enrich with sender data and attachments
+      const enrichedMessages = await Promise.all(
+        messages.map(async (message) => {
+          const sender = message.senderId ? await storage.getUser(message.senderId) : null;
+          const attachments = await storage.getMessageAttachments(message.id);
+          
+          return {
+            ...message,
+            sender: toPublicUser(sender),
+            attachments: attachments
+          };
+        })
+      );
+
+      res.json(enrichedMessages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Upload file for chat message
+  app.post("/api/chat/sessions/:sessionId/upload", requireUser, upload.single('file'), async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      
+      // Verify user owns this session
+      const session = await storage.getChatSession(sessionId);
+      if (!session || session.userId !== req.user.id) {
+        return res.status(403).json({ error: "Access denied to this chat session" });
+      }
+      
+      // Check file size limits based on type
+      const isImage = req.file.mimetype.startsWith('image/');
+      const isVideo = req.file.mimetype.startsWith('video/');
+      const maxSize = isImage ? 30 * 1024 * 1024 : 150 * 1024 * 1024; // 30MB for images, 150MB for videos
+      
+      if (req.file.size > maxSize) {
+        // Delete uploaded file if size exceeded
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ 
+          error: `File too large. Maximum size is ${isImage ? '30MB' : '150MB'} for ${isImage ? 'images' : 'videos'}` 
+        });
+      }
+      
+      // Create message with file content indicator
+      const message = await storage.createMessage({
+        sessionId,
+        senderId: req.user.id,
+        senderType: "user",
+        content: `[File: ${req.file.originalname}]`,
+        isRead: false
+      });
+      
+      // Create attachment record
+      const attachment = await storage.createAttachment({
+        messageId: message.id,
+        fileName: req.file.filename,
+        originalName: req.file.originalname,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+        filePath: req.file.path,
+      });
+      
+      res.json({ message, attachment });
+    } catch (error) {
+      // Clean up uploaded file on error
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      res.status(500).json({ error: "Failed to upload file" });
+    }
+  });
+
+  // Serve uploaded files
+  app.get("/api/uploads/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join('uploads', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      
+      // Get attachment info to verify access
+      const attachment = await storage.getAttachmentByFilename(filename);
+      if (!attachment) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      
+      // Check if file has expired
+      if (attachment.expiresAt && new Date() > attachment.expiresAt) {
+        // Delete expired file
+        fs.unlinkSync(filePath);
+        await storage.deleteAttachment(attachment.id);
+        return res.status(404).json({ error: "File has expired" });
+      }
+      
+      res.sendFile(path.resolve(filePath));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to serve file" });
     }
   });
 

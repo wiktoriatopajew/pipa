@@ -8,11 +8,46 @@ import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
+import fs from "fs";
 
 const app = express();
 
 // Initialize admin user after environment variables are loaded
 storage.initAdminUser();
+
+// Cleanup expired files function
+const cleanupExpiredFiles = async () => {
+  try {
+    console.log("Starting cleanup of expired files...");
+    const expiredAttachments = await storage.getExpiredAttachments();
+    
+    for (const attachment of expiredAttachments) {
+      try {
+        // Delete physical file
+        if (fs.existsSync(attachment.filePath)) {
+          fs.unlinkSync(attachment.filePath);
+          console.log(`Deleted expired file: ${attachment.filePath}`);
+        }
+        
+        // Delete attachment record
+        await storage.deleteAttachment(attachment.id);
+        console.log(`Deleted expired attachment record: ${attachment.id}`);
+      } catch (error) {
+        console.error(`Error deleting attachment ${attachment.id}:`, error);
+      }
+    }
+    
+    console.log(`Cleanup completed. Removed ${expiredAttachments.length} expired files.`);
+  } catch (error) {
+    console.error("Error during file cleanup:", error);
+  }
+};
+
+// Run cleanup on startup
+cleanupExpiredFiles();
+
+// Schedule cleanup to run every 24 hours (86400000 ms)
+setInterval(cleanupExpiredFiles, 86400000);
 
 // Security headers with Helmet
 app.use(helmet({

@@ -2,7 +2,8 @@ import {
   type User, type InsertUser,
   type Subscription, type InsertSubscription,
   type ChatSession, type InsertChatSession,
-  type Message, type InsertMessage
+  type Message, type InsertMessage,
+  type Attachment, type InsertAttachment
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
@@ -35,6 +36,15 @@ export interface IStorage {
   getAllUnreadMessages(): Promise<Message[]>;
   markMessageAsRead(messageId: string): Promise<void>;
   getRecentMessages(limit?: number): Promise<Message[]>;
+  
+  // Attachment methods
+  createAttachment(attachment: InsertAttachment): Promise<Attachment>;
+  getMessageAttachments(messageId: string): Promise<Attachment[]>;
+  getAttachment(id: string): Promise<Attachment | undefined>;
+  getAttachmentByFilename(filename: string): Promise<Attachment | undefined>;
+  deleteAttachment(id: string): Promise<void>;
+  getExpiredAttachments(): Promise<Attachment[]>;
+  deleteExpiredAttachments(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -42,12 +52,14 @@ export class MemStorage implements IStorage {
   private subscriptions: Map<string, Subscription>;
   private chatSessions: Map<string, ChatSession>;
   private messages: Map<string, Message>;
+  private attachments: Map<string, Attachment>;
 
   constructor() {
     this.users = new Map();
     this.subscriptions = new Map();
     this.chatSessions = new Map();
     this.messages = new Map();
+    this.attachments = new Map();
   }
 
   async initAdminUser() {
@@ -253,6 +265,57 @@ export class MemStorage implements IStorage {
     return Array.from(this.messages.values())
       .sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime())
       .slice(0, limit);
+  }
+
+  // Attachment methods
+  async createAttachment(insertAttachment: InsertAttachment): Promise<Attachment> {
+    const id = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days from now
+    
+    const attachment: Attachment = {
+      ...insertAttachment,
+      id,
+      messageId: insertAttachment.messageId || null,
+      uploadedAt: new Date(),
+      expiresAt,
+    };
+    this.attachments.set(id, attachment);
+    return attachment;
+  }
+
+  async getMessageAttachments(messageId: string): Promise<Attachment[]> {
+    return Array.from(this.attachments.values()).filter(
+      (attachment) => attachment.messageId === messageId
+    );
+  }
+
+  async getAttachment(id: string): Promise<Attachment | undefined> {
+    return this.attachments.get(id);
+  }
+
+  async getAttachmentByFilename(filename: string): Promise<Attachment | undefined> {
+    return Array.from(this.attachments.values()).find(
+      (attachment) => attachment.fileName === filename
+    );
+  }
+
+  async deleteAttachment(id: string): Promise<void> {
+    this.attachments.delete(id);
+  }
+
+  async getExpiredAttachments(): Promise<Attachment[]> {
+    const now = new Date();
+    return Array.from(this.attachments.values()).filter(
+      (attachment) => attachment.expiresAt! < now
+    );
+  }
+
+  async deleteExpiredAttachments(): Promise<void> {
+    const expiredAttachments = await this.getExpiredAttachments();
+    expiredAttachments.forEach(attachment => {
+      this.attachments.delete(attachment.id);
+    });
   }
 }
 

@@ -43,6 +43,18 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+export const attachments = pgTable("attachments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageId: varchar("message_id").references(() => messages.id),
+  fileName: text("file_name").notNull(), // unique filename on server
+  originalName: text("original_name").notNull(), // original filename from user
+  fileSize: integer("file_size").notNull(), // size in bytes
+  mimeType: text("mime_type").notNull(), // MIME type
+  filePath: text("file_path").notNull(), // path on server
+  uploadedAt: timestamp("uploaded_at").default(sql`now()`),
+  expiresAt: timestamp("expires_at").notNull(), // auto-delete date (30 days)
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -74,6 +86,12 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true,
 });
 
+export const insertAttachmentSchema = createInsertSchema(attachments).omit({
+  id: true,
+  uploadedAt: true,
+  expiresAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
@@ -82,3 +100,5 @@ export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 export type ChatSession = typeof chatSessions.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
+export type Attachment = typeof attachments.$inferSelect;
