@@ -8,6 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { sendUserLoginNotification, sendFirstMessageNotification, sendSubsequentMessageNotification } from "./email";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal-wrapper";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -705,24 +706,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send email notifications if this is the first message
       if (isFirstMessage) {
         try {
-          const emailData = {
-            userEmail: req.user.email || 'unknown@email.com',
-            userName: req.user.username,
-            messageContent: content,
-            sessionId: sessionId,
-            isFirstMessage: true
-          };
-          
-          // Send first message notification
-          await sendFirstMessageNotification(emailData);
-          
-          // Schedule follow-up email after 5 minutes
-          scheduleFollowUpEmail(emailData);
-          
-          console.log('Email notifications sent for first message from user:', req.user.username);
+          await sendFirstMessageNotification(
+            req.user.username,
+            req.user.email || 'unknown@email.com',
+            content,
+            sessionId
+          );
+          console.log('Email notification sent for first message from user:', req.user.username);
         } catch (emailError) {
           // Log error but don't fail the message creation
-          console.error('Failed to send email notifications:', emailError);
+          console.error('Failed to send email notification:', emailError);
+        }
+      } else {
+        // Send subsequent message notification
+        try {
+          const messageCount = userMessages.length + 1;
+          await sendSubsequentMessageNotification(
+            req.user.username,
+            req.user.email || 'unknown@email.com',
+            content,
+            sessionId,
+            messageCount
+          );
+          console.log(`Email notification sent for message #${messageCount} from user:`, req.user.username);
+        } catch (emailError) {
+          console.error('Failed to send email notification:', emailError);
         }
       }
       
