@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -91,6 +92,19 @@ declare module 'express-serve-static-core' {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // PayPal routes - reference: blueprint:javascript_paypal
+  app.get("/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
+
   // Admin Authentication
   app.post("/api/admin/login", authRateLimit, async (req, res) => {
     try {
