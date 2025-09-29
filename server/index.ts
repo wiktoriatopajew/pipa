@@ -12,14 +12,19 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: process.env.NODE_ENV === 'production' 
+        ? ["'self'"] 
+        : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: process.env.NODE_ENV === 'production'
+        ? ["'self'"]
+        : ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
+      frameSrc: ["'none'"],
+      frameAncestors: ["'none'"]
     }
   },
   hsts: {
@@ -32,7 +37,17 @@ app.use(helmet({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Validate SESSION_SECRET for production security
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET environment variable is required in production');
+}
+
 // Configure secure session management with memory store for development
+// WARNING: MemoryStore is not suitable for production - use Redis or similar persistent store
+if (process.env.NODE_ENV === 'production') {
+  console.warn('WARNING: Using MemoryStore in production is not recommended. Switch to Redis or persistent session store.');
+}
+
 const MemoryStoreSession = MemoryStore(session);
 
 app.use(session({
@@ -66,7 +81,9 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      
+      // Only log response body in development to avoid logging sensitive data
+      if (capturedJsonResponse && process.env.NODE_ENV !== 'production') {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 

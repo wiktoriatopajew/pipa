@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         stats,
-        users: users.filter(u => !u.isAdmin), // Don't show admin user
+        users: users.filter(u => !u.isAdmin).map(toPublicUser), // Sanitize user data
         subscriptions,
         activeSessions,
         unreadMessages,
@@ -199,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           return {
             ...session,
-            user,
+            user: toPublicUser(user),
             lastMessage,
             unreadCount,
             messageCount: messages.length
@@ -218,13 +218,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const messages = await storage.getSessionMessages(sessionId);
       
-      // Enrich with sender data
+      // Enrich with sender data (sanitized)
       const enrichedMessages = await Promise.all(
         messages.map(async (message) => {
           const sender = message.senderId ? await storage.getUser(message.senderId) : null;
           return {
             ...message,
-            sender
+            sender: toPublicUser(sender)
           };
         })
       );
@@ -458,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/subscriptions", async (req, res) => {
+  app.post("/api/subscriptions", requireAdmin, async (req, res) => {
     try {
       if (!req.session?.userId) {
         return res.status(401).json({ error: "Authentication required" });
@@ -524,13 +524,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const messages = await storage.getSessionMessages(sessionId);
       
-      // Enrich with sender data
+      // Enrich with sender data (sanitized)
       const enrichedMessages = await Promise.all(
         messages.map(async (message) => {
           const sender = message.senderId ? await storage.getUser(message.senderId) : null;
           return {
             ...message,
-            sender
+            sender: toPublicUser(sender)
           };
         })
       );
