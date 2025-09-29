@@ -571,16 +571,22 @@ export default function AdminPanel() {
                                     : "bg-success/20 text-success-foreground border border-success/30"
                                 }`}
                               >
+                                <div className="flex items-center space-x-2 mb-1">
+                                  {message.senderType === "admin" ? (
+                                    <Badge variant="secondary" className="text-xs">
+                                      Admin
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {message.sender?.username || "Użytkownik"}
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-sm">{message.content}</p>
                                 <div className="flex items-center justify-between mt-1">
                                   <span className="text-xs opacity-70">
                                     {formatDate(message.createdAt)}
                                   </span>
-                                  {message.senderType === "admin" && (
-                                    <Badge variant="secondary" className="text-xs ml-2">
-                                      Admin
-                                    </Badge>
-                                  )}
                                   {message.senderType === "user" && !message.isRead && (
                                     <AlertCircle className="w-3 h-3 ml-2 text-warning" />
                                   )}
