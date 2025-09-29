@@ -325,4 +325,33 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* PayPal Button Styles */
+  paypal-button {
+    display: inline-block;
+    width: 100%;
+    min-height: 48px;
+    background: #0070ba;
+    color: white;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 16px;
+    text-align: center;
+    line-height: 48px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  paypal-button:hover {
+    background: #005ea6;
+  }
+
+  paypal-button:active {
+    background: #004a85;
+  }
+
+  paypal-button::before {
+    content: "Pay with PayPal";
+    display: block;
+  }
 }
