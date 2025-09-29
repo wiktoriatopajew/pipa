@@ -182,6 +182,7 @@ export default function AdminPanel() {
         title: "Logged out successfully",
         description: "See you!",
       });
+      window.location.href = '/';
     },
     onError: () => {
       toast({

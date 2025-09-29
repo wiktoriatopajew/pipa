@@ -34,6 +34,7 @@ export default function Contact() {
         title: "Logged out successfully",
         description: "See you soon!",
       });
+      window.location.href = '/';
     },
     onError: () => {
       toast({

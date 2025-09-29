@@ -45,6 +45,7 @@ export default function Home() {
         title: "Logged out successfully",
         description: "See you soon!",
       });
+      window.location.href = '/';
     },
     onError: () => {
       toast({

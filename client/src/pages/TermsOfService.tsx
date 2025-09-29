@@ -26,6 +26,7 @@ export default function TermsOfService() {
         title: "Logged out successfully",
         description: "See you soon!",
       });
+      window.location.href = '/';
     },
   });
 
