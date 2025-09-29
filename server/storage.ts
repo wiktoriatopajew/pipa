@@ -48,12 +48,9 @@ export class MemStorage implements IStorage {
     this.subscriptions = new Map();
     this.chatSessions = new Map();
     this.messages = new Map();
-    
-    // Create admin user from environment variables if provided
-    this.initAdminUser();
   }
 
-  private async initAdminUser() {
+  async initAdminUser() {
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;
     

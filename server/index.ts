@@ -1,11 +1,18 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
 
 const app = express();
+
+// Initialize admin user after environment variables are loaded
+storage.initAdminUser();
 
 // Security headers with Helmet
 app.use(helmet({
