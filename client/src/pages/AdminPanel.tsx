@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { 
   Users, MessageCircle, DollarSign, Activity, Send, 
-  Eye, Clock, Shield, AlertCircle, CheckCircle2 
+  Eye, Clock, Shield, AlertCircle, CheckCircle2, Image, Video, FileText
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -43,6 +43,14 @@ interface ChatSession {
   lastActivity: string;
 }
 
+interface Attachment {
+  id: string;
+  fileName: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
+}
+
 interface Message {
   id: string;
   content: string;
@@ -50,6 +58,7 @@ interface Message {
   sender?: any;
   createdAt: string;
   isRead: boolean;
+  attachments?: Attachment[];
 }
 
 export default function AdminPanel() {
@@ -208,6 +217,67 @@ export default function AdminPanel() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US");
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <Image className="w-4 h-4" />;
+    if (mimeType.startsWith('video/')) return <Video className="w-4 h-4" />;
+    return <FileText className="w-4 h-4" />;
+  };
+
+  const renderAttachment = (attachment: Attachment) => {
+    const isImage = attachment.mimeType.startsWith('image/');
+    const isVideo = attachment.mimeType.startsWith('video/');
+
+    if (isImage) {
+      return (
+        <div className="mt-2">
+          <img 
+            src={`/api/uploads/${attachment.fileName}`}
+            alt={attachment.originalName}
+            className="max-w-xs rounded-lg border border-white/20"
+            style={{ maxHeight: '200px' }}
+          />
+          <p className="text-xs opacity-70 mt-1">
+            {attachment.originalName} ({formatFileSize(attachment.fileSize)})
+          </p>
+        </div>
+      );
+    }
+
+    if (isVideo) {
+      return (
+        <div className="mt-2">
+          <video 
+            src={`/api/uploads/${attachment.fileName}`}
+            controls
+            className="max-w-xs rounded-lg border border-white/20"
+            style={{ maxHeight: '200px' }}
+          />
+          <p className="text-xs opacity-70 mt-1">
+            {attachment.originalName} ({formatFileSize(attachment.fileSize)})
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-2 p-2 border border-white/20 rounded-lg flex items-center space-x-2 bg-white/10">
+        {getFileIcon(attachment.mimeType)}
+        <div className="flex-1">
+          <p className="text-sm font-medium">{attachment.originalName}</p>
+          <p className="text-xs opacity-70">{formatFileSize(attachment.fileSize)}</p>
+        </div>
+      </div>
+    );
   };
 
   const getVehicleInfo = (vehicleInfoString?: string) => {
@@ -568,9 +638,9 @@ export default function AdminPanel() {
                         </Badge>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="flex flex-col h-full p-0">
+                    <CardContent className="flex flex-col h-full p-0 overflow-hidden">
                       {/* Messages */}
-                      <ScrollArea className="flex-1 p-4">
+                      <ScrollArea className="flex-1 p-4 min-h-0">
                         <div className="space-y-4">
                           {messages?.map((message) => (
                             <div
@@ -600,6 +670,11 @@ export default function AdminPanel() {
                                   </span>
                                 </div>
                                 <p className="text-sm">{message.content}</p>
+                                {message.attachments && message.attachments.map((attachment) => (
+                                  <div key={attachment.id}>
+                                    {renderAttachment(attachment)}
+                                  </div>
+                                ))}
                                 {message.senderType === "user" && !message.isRead && (
                                   <div className="flex items-center text-xs opacity-80">
                                     <AlertCircle className="w-3 h-3 mr-1" />
@@ -613,7 +688,7 @@ export default function AdminPanel() {
                       </ScrollArea>
 
                       {/* Message Input */}
-                      <div className="border-t p-4">
+                      <div className="border-t p-4 flex-shrink-0">
                         <div className="flex space-x-2">
                           <Input
                             placeholder="Napisz wiadomość..."
