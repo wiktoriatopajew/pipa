@@ -4,10 +4,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { Car, Mail, MessageCircle, Clock, MapPin } from "lucide-react";
+import { Mail, MessageCircle, Clock, MapPin } from "lucide-react";
 
 export default function Contact() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Check if user is authenticated
+  const { data: user } = useQuery({
+    queryKey: ['/api/users/me'],
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/users/logout"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
+      toast({
+        title: "Logged out successfully",
+        description: "See you soon!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Logout error",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
   return (
     <>
       <Helmet>
@@ -28,19 +64,7 @@ export default function Contact() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="border-b border-border">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
-              <Car className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">ChatWithMechanic</span>
-            </Link>
-            <nav className="flex space-x-6">
-              <Link href="/" className="hover:text-primary" data-testid="link-home-nav">Home</Link>
-              <Link href="/contact" className="hover:text-primary text-primary" data-testid="link-contact">Contact</Link>
-            </nav>
-          </div>
-        </header>
+        <Header user={user as any} onLogin={() => {}} onLogout={handleLogout} />
 
         {/* Hero Section */}
         <section className="py-20 px-4">
