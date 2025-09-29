@@ -1,0 +1,86 @@
+import { Link } from "wouter";
+import { MessageCircle, Mail, Shield, Clock } from "lucide-react";
+
+export default function Footer() {
+  return (
+    <footer className="bg-muted/30 border-t">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Brand */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-warning">
+                <MessageCircle className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-primary to-warning bg-clip-text text-transparent">
+                ChatWithMechanic
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Professional automotive advice for all vehicles. Get expert help from certified mechanics online.
+            </p>
+            <div className="flex items-center space-x-2 text-sm">
+              <Mail className="w-4 h-4 text-primary" />
+              <a href="mailto:contact@chatwithmechanic.com" className="text-muted-foreground hover:text-primary">
+                contact@chatwithmechanic.com
+              </a>
+            </div>
+          </div>
+
+          {/* Services */}
+          <div>
+            <h3 className="font-semibold mb-4">Vehicle Types</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link href="/" className="hover:text-primary">Cars & Trucks</Link></li>
+              <li><Link href="/" className="hover:text-primary">Motorcycles</Link></li>
+              <li><Link href="/" className="hover:text-primary">Boats & Watercraft</Link></li>
+              <li><Link href="/" className="hover:text-primary">Buses</Link></li>
+              <li><Link href="/" className="hover:text-primary">Construction Equipment</Link></li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h3 className="font-semibold mb-4">Support</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link href="/contact" className="hover:text-primary">Contact Us</Link></li>
+              <li><Link href="/" className="hover:text-primary">FAQ</Link></li>
+              <li><Link href="/" className="hover:text-primary">How It Works</Link></li>
+              <li><Link href="/" className="hover:text-primary">Mechanic Verification</Link></li>
+            </ul>
+          </div>
+
+          {/* Features */}
+          <div>
+            <h3 className="font-semibold mb-4">Features</h3>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 text-sm">
+                <Clock className="w-4 h-4 text-success" />
+                <span className="text-muted-foreground">24/7 Available</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm">
+                <Shield className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Certified Mechanics</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm">
+                <MessageCircle className="w-4 h-4 text-warning" />
+                <span className="text-muted-foreground">Instant Responses</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
+          <div>
+            © 2024 ChatWithMechanic.com. All rights reserved.
+          </div>
+          <div className="flex space-x-6 mt-4 md:mt-0">
+            <Link href="/" className="hover:text-primary">Privacy Policy</Link>
+            <Link href="/" className="hover:text-primary">Terms of Service</Link>
+            <Link href="/" className="hover:text-primary">Refund Policy</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
