@@ -3,10 +3,13 @@ import {
   type Subscription, type InsertSubscription,
   type ChatSession, type InsertChatSession,
   type Message, type InsertMessage,
-  type Attachment, type InsertAttachment
+  type Attachment, type InsertAttachment,
+  users, subscriptions, chatSessions, messages, attachments
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
+import { db } from "./db";
+import { eq, and, desc, lt } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -319,4 +322,218 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// PostgreSQL Storage implementation using Drizzle ORM
+export class PostgresStorage implements IStorage {
+  async initAdminUser() {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    
+    if (adminEmail && adminPassword) {
+      const existingAdmin = await this.getUserByEmail(adminEmail);
+      if (!existingAdmin) {
+        const hashedPassword = await bcrypt.hash(adminPassword, 12);
+        await db.insert(users).values({
+          username: "admin",
+          password: hashedPassword,
+          email: adminEmail,
+          isAdmin: true,
+          hasSubscription: true,
+          isOnline: false,
+        });
+        console.log(`Admin user created with email: ${adminEmail}`);
+      }
+    }
+  }
+
+  // User methods
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const hashedPassword = await bcrypt.hash(user.password, 12);
+    const result = await db.insert(users).values({
+      ...user,
+      password: hashedPassword,
+    }).returning();
+    return result[0];
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async verifyPassword(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
+  }
+
+  // Subscription methods
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const result = await db.insert(subscriptions).values(subscription).returning();
+    
+    // Update user hasSubscription flag
+    if (subscription.userId) {
+      await db.update(users)
+        .set({ hasSubscription: true })
+        .where(eq(users.id, subscription.userId));
+    }
+    
+    return result[0];
+  }
+
+  async getUserSubscriptions(userId: string): Promise<Subscription[]> {
+    return await db.select().from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .orderBy(desc(subscriptions.purchasedAt));
+  }
+
+  async getAllActiveSubscriptions(): Promise<Subscription[]> {
+    return await db.select().from(subscriptions)
+      .where(eq(subscriptions.status, "active"));
+  }
+
+  // Chat session methods
+  async createChatSession(session: InsertChatSession): Promise<ChatSession> {
+    const result = await db.insert(chatSessions).values(session).returning();
+    return result[0];
+  }
+
+  async getChatSession(id: string): Promise<ChatSession | undefined> {
+    const result = await db.select().from(chatSessions)
+      .where(eq(chatSessions.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getUserChatSessions(userId: string): Promise<ChatSession[]> {
+    return await db.select().from(chatSessions)
+      .where(eq(chatSessions.userId, userId))
+      .orderBy(desc(chatSessions.lastActivity));
+  }
+
+  async getAllActiveChatSessions(): Promise<ChatSession[]> {
+    return await db.select().from(chatSessions)
+      .where(eq(chatSessions.status, "active"));
+  }
+
+  async updateChatSession(id: string, updates: Partial<ChatSession>): Promise<ChatSession | undefined> {
+    const result = await db.update(chatSessions)
+      .set(updates)
+      .where(eq(chatSessions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Message methods
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const result = await db.insert(messages).values(message).returning();
+    
+    // Update chat session lastActivity
+    if (message.sessionId) {
+      await db.update(chatSessions)
+        .set({ lastActivity: new Date() })
+        .where(eq(chatSessions.id, message.sessionId));
+    }
+    
+    return result[0];
+  }
+
+  async getSessionMessages(sessionId: string): Promise<Message[]> {
+    return await db.select().from(messages)
+      .where(eq(messages.sessionId, sessionId))
+      .orderBy(messages.createdAt);
+  }
+
+  async getAllUnreadMessages(): Promise<Message[]> {
+    return await db.select().from(messages)
+      .where(
+        and(
+          eq(messages.isRead, false),
+          eq(messages.senderType, "user")
+        )
+      );
+  }
+
+  async markMessageAsRead(messageId: string): Promise<void> {
+    await db.update(messages)
+      .set({ isRead: true })
+      .where(eq(messages.id, messageId));
+  }
+
+  async getRecentMessages(limit: number = 50): Promise<Message[]> {
+    return await db.select().from(messages)
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+  }
+
+  // Attachment methods
+  async createAttachment(attachment: InsertAttachment): Promise<Attachment> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    
+    const result = await db.insert(attachments).values({
+      ...attachment,
+      expiresAt,
+    }).returning();
+    return result[0];
+  }
+
+  async getMessageAttachments(messageId: string): Promise<Attachment[]> {
+    return await db.select().from(attachments)
+      .where(eq(attachments.messageId, messageId));
+  }
+
+  async getAttachment(id: string): Promise<Attachment | undefined> {
+    const result = await db.select().from(attachments)
+      .where(eq(attachments.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAttachmentByFilename(filename: string): Promise<Attachment | undefined> {
+    const result = await db.select().from(attachments)
+      .where(eq(attachments.fileName, filename)).limit(1);
+    return result[0];
+  }
+
+  async deleteAttachment(id: string): Promise<void> {
+    await db.delete(attachments).where(eq(attachments.id, id));
+  }
+
+  async getExpiredAttachments(): Promise<Attachment[]> {
+    const now = new Date();
+    return await db.select().from(attachments)
+      .where(lt(attachments.expiresAt, now));
+  }
+
+  async deleteExpiredAttachments(): Promise<void> {
+    const now = new Date();
+    await db.delete(attachments).where(lt(attachments.expiresAt, now));
+  }
+}
+
+// Use PostgresStorage for production, MemStorage for testing
+export const storage = process.env.NODE_ENV === 'test' 
+  ? new MemStorage() 
+  : new PostgresStorage();
