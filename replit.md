@@ -72,3 +72,23 @@ Preferred communication style: Simple, everyday language.
 - **React Query Dev Tools**: Development utilities for debugging server state
 - **React Hook Form**: Form handling with validation support via Hookform resolvers
 - **Date-fns**: Date manipulation utilities for timestamps and formatting
+
+### SEO and Marketing Pages
+- **SEO Implementation**: React Helmet Async with HelmetProvider for server-side rendering support
+- **Vehicle Type Pages**: Dedicated pages for Cars & Trucks, Motorcycles, Boats & Watercraft, Buses, and Construction Equipment
+- **Support Pages**: Contact Us, FAQ, How It Works, and Mechanic Verification pages
+- **Meta Tag Optimization**: Each page includes comprehensive SEO meta tags (title, description, keywords, Open Graph, Twitter Cards)
+- **Professional Content**: Industry-specific content for each vehicle type with clear value propositions and calls-to-action
+- **Support Contact**: Standardized support email (support@chatwithmechanic.com) across all pages
+
+## Recent Changes
+
+### SEO Pages Implementation (September 2025)
+- **Added 9 SEO-optimized pages**: 5 vehicle type pages and 4 support pages
+- **Switched to react-helmet-async**: Proper server-side rendering support for meta tags
+- **Updated footer navigation**: All footer links now point to dedicated pages instead of homepage
+- **Implemented comprehensive SEO**: Each page includes title, meta description, keywords, Open Graph tags, and Twitter Card tags
+- **Professional content creation**: Vehicle-specific content tailored to target audiences
+- **Support email standardization**: Updated all contact references to support@chatwithmechanic.com
+- **Route configuration**: Added all new pages to App.tsx routing with proper data-testid attributes
+- **Testing verification**: All pages tested for proper SEO tag rendering and navigation functionality
