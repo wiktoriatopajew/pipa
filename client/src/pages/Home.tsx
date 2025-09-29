@@ -21,6 +21,8 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
   const [vehicleInfo, setVehicleInfo] = useState<any>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [pendingSelectedSessionId, setPendingSelectedSessionId] = useState<string | null>(null);
+  const [pendingVehicleInfo, setPendingVehicleInfo] = useState<any>(null);
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -94,7 +96,31 @@ export default function Home() {
     console.log('Payment successful!', userData);
     // Refresh user data to get updated subscription status
     queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
-    setSessionId(userData.sessionId);
+    queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
+    
+    // Close payment modal
+    setShowPayment(false);
+    
+    // Check if user was trying to continue a selected session
+    if (pendingSelectedSessionId && pendingVehicleInfo) {
+      // Continue the previously selected chat session
+      setSessionId(pendingSelectedSessionId);
+      setVehicleInfo(pendingVehicleInfo);
+      
+      // Clear pending state
+      setPendingSelectedSessionId(null);
+      setPendingVehicleInfo(null);
+      
+      toast({
+        title: "Welcome back!",
+        description: "Continuing your previous chat session.",
+      });
+    } else {
+      // Start a new session (original behavior)
+      setSessionId(userData.sessionId);
+      setVehicleInfo(null);
+    }
+    
     setShowChat(true);
   };
 
@@ -106,9 +132,25 @@ export default function Home() {
 
   const handleSelectSession = async (selectedSessionId: string, selectedVehicleInfo: any) => {
     console.log('Selected chat session:', selectedSessionId);
-    setSessionId(selectedSessionId);
-    setVehicleInfo(selectedVehicleInfo);
-    setShowChat(true);
+    
+    // Check if user has access before showing chat
+    if (!hasAccess) {
+      // Store the selected session for after payment
+      setPendingSelectedSessionId(selectedSessionId);
+      setPendingVehicleInfo(selectedVehicleInfo);
+      
+      toast({
+        title: "Premium access required",
+        description: "You'll continue this chat after subscribing.",
+      });
+      
+      setShowPayment(true);
+    } else {
+      // User has access, continue directly
+      setSessionId(selectedSessionId);
+      setVehicleInfo(selectedVehicleInfo);
+      setShowChat(true);
+    }
   };
 
   const handleStartNewChat = () => {
