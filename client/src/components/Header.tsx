@@ -52,14 +52,18 @@ export default function Header({ user, onLogin, onLogout, onOpenAdmin }: HeaderP
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center space-x-2 hover-elevate rounded-lg px-2 py-1">
+        <button 
+          onClick={handleHomeClick}
+          className="flex items-center space-x-2 hover-elevate rounded-lg px-2 py-1 cursor-pointer"
+          data-testid="button-logo"
+        >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-warning">
             <MessageCircle className="w-4 h-4 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-warning bg-clip-text text-transparent">
             ChatWithMechanic
           </span>
-        </Link>
+        </button>
 
         <nav className="hidden md:flex items-center space-x-6">
           <button 
