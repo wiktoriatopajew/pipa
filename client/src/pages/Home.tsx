@@ -169,8 +169,6 @@ export default function Home() {
   if (showChat) {
     return (
       <div className="min-h-screen bg-background">
-        <Header user={user as any} onLogin={handleLogin} onLogout={handleLogout} />
-        
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
