@@ -31,7 +31,7 @@ export default function HeroSection({ onStartChat, onGetStarted }: HeroSectionPr
           <div className="space-y-4">
             <Badge className="bg-primary/20 text-primary border-primary/30 mb-4" data-testid="badge-featured">
               <Star className="w-3 h-3 mr-1" />
-              Expert Automotive Help
+              24/7 Professional Support
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
               Chat With Professional
