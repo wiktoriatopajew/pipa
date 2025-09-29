@@ -7,6 +7,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, Clock, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Pool of realistic mechanic names for chat interactions
+const CHAT_MECHANIC_NAMES = [
+  "alex_motors", "jamie_tech", "chris_garage", "morgan_auto", "riley_wrench", "casey_fix",
+  "taylor_diesel", "jordan_brake", "sam_engine", "blake_trans", "drew_spark", "quinn_repair",
+  "avery_clutch", "harper_tune", "cameron_volt", "peyton_pump", "sage_filter", "rowan_belt",
+  "dakota_wire", "hayden_code", "phoenix_scan", "skylar_oil", "logan_gear", "parker_tool",
+  "reese_motor", "emery_auto", "finley_car", "kendall_fix", "marley_shop", "nova_tech"
+];
+
+// Get a random mechanic name
+const getRandomMechanicName = (): string => {
+  return CHAT_MECHANIC_NAMES[Math.floor(Math.random() * CHAT_MECHANIC_NAMES.length)];
+};
+
 // Function to generate vehicle-specific diagnostic questions
 const getDiagnosticQuestions = (vehicleInfo: any): string => {
   const vehicleType = vehicleInfo.type;
@@ -90,7 +104,8 @@ const generateIntelligentResponse = (userInput: string, vehicleInfo: any, messag
   
   // After several exchanges, transition to human mechanic
   if (messageCount > 4) {
-    return `Thank you for providing those details. Based on your ${vehicleType} and the symptoms you've described, I'm now connecting you with Mike, one of our senior mechanics who specializes in ${vehicleType} issues. He'll be able to provide you with specific repair steps and cost estimates. Mike will be with you in just a moment!`;
+    const mechanicName = getRandomMechanicName();
+    return `Thank you for providing those details. Based on your ${vehicleType} and the symptoms you've described, I'm now connecting you with ${mechanicName}, one of our senior mechanics who specializes in ${vehicleType} issues. They'll be able to provide you with specific repair steps and cost estimates. ${mechanicName} will be with you in just a moment!`;
   }
   
   // Analyze user responses and provide relevant follow-up

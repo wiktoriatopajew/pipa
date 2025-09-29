@@ -4,19 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Circle } from "lucide-react";
 
-// Pool of realistic mechanic usernames
+// Pool of realistic mechanic usernames that look like real people
 const MECHANIC_POOL = [
-  "Alan43", "AutoGuru88", "Mike_Wrench", "TurboTech", "GearHead_Pro", "EngineExpert",
-  "CarDoc_23", "WheelWizard", "PistonPete", "RpmRider", "ChassisChamp", "BrakesBoss",
-  "OilChange_Joe", "TransMaster", "CoolantKing", "SparkPlug_Sam", "FuelPump_Fred", "Radiator_Rick",
-  "Exhaust_Eddie", "Suspension_Sue", "Battery_Bob", "Alternator_Al", "Starter_Steve", "Clutch_Chris",
-  "Timing_Tom", "Valve_Vic", "Camshaft_Carl", "Crankshaft_Craig", "Bearing_Ben", "Gasket_Gary",
-  "Filter_Frank", "Belt_Bill", "Hose_Henry", "Wire_Will", "Fuse_Felix", "Relay_Ray",
-  "Sensor_Sean", "Module_Mark", "Circuit_Cindy", "Voltage_Vince", "Amperage_Amy", "Resistance_Ron",
-  "Diagnostic_Dan", "Scanner_Scott", "Code_Casey", "Error_Eric", "Fix_Fiona", "Repair_Randy",
-  "Tune_Tony", "Service_Sally", "Maintenance_Mike", "Polish_Paul", "Detail_Diana", "Wash_Walter",
-  "Grease_Greg", "Tools_Terry", "Wrench_Wayne", "Socket_Sophia", "Ratchet_Rachel", "Torque_Todd",
-  "Impact_Ian", "Drill_Drew", "Hammer_Hannah", "Screwdriver_Simon"
+  "alex_motors", "jamie_tech", "chris_garage", "morgan_auto", "riley_wrench", "casey_fix",
+  "taylor_diesel", "jordan_brake", "sam_engine", "blake_trans", "drew_spark", "quinn_repair",
+  "avery_clutch", "harper_tune", "cameron_volt", "peyton_pump", "sage_filter", "rowan_belt",
+  "dakota_wire", "hayden_code", "phoenix_scan", "skylar_oil", "logan_gear", "parker_tool",
+  "reese_motor", "emery_auto", "finley_car", "kendall_fix", "marley_shop", "nova_tech",
+  "remy_garage", "sage_wrench", "tatum_engine", "wren_diesel", "zion_brake", "emerson_volt",
+  "river_pump", "indigo_gear", "arbor_tune", "cypress_oil", "atlas_motor", "echo_repair",
+  "kai_auto", "lane_tech", "nyx_garage", "onyx_wrench", "rain_engine", "storm_brake",
+  "vale_pump", "west_gear", "zen_motor", "ash_repair", "bay_auto", "cruz_tech",
+  "dean_garage", "ell_wrench", "fox_engine", "gray_brake", "hart_pump", "ink_gear"
 ];
 
 // Vehicle specialties for mechanics

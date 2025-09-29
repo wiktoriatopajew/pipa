@@ -59,9 +59,11 @@ export default function Header({ user, onLogin, onLogout, onOpenAdmin }: HeaderP
                   {user.email}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onOpenAdmin} data-testid="button-admin">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Admin Panel
+                <DropdownMenuItem asChild data-testid="button-admin">
+                  <Link href="/admin" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Admin Panel
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onLogout} data-testid="button-logout">
