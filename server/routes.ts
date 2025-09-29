@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertSubscriptionSchema, insertChatSessionSchema, insertMessageSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -12,6 +13,30 @@ const loginSchema = z.object({
 
 const subscriptionRequestSchema = z.object({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid amount format")
+});
+
+// Utility function to sanitize user objects
+const toPublicUser = (user: any) => {
+  if (!user) return null;
+  const { password, ...publicUser } = user;
+  return publicUser;
+};
+
+// Rate limiting configurations
+const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: { error: "Too many authentication attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalRateLimit = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // limit each IP to 30 requests per minute
+  message: { error: "Too many requests, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Extend Express Request type to include session and user data
@@ -25,7 +50,7 @@ declare module 'express-serve-static-core' {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Authentication
-  app.post("/api/admin/login", async (req, res) => {
+  app.post("/api/admin/login", authRateLimit, async (req, res) => {
     try {
       // Validate request body
       const result = loginSchema.safeParse(req.body);
@@ -126,7 +151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users.filter(u => !u.isAdmin));
+      const sanitizedUsers = users.filter(u => !u.isAdmin).map(toPublicUser);
+      res.json(sanitizedUsers);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch users" });
     }
@@ -137,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
       const user = await storage.updateUser(id, updates);
-      res.json(user);
+      res.json(toPublicUser(user));
     } catch (error) {
       res.status(500).json({ error: "Failed to update user" });
     }
@@ -300,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // User Authentication endpoints
-  app.post("/api/users/register", async (req, res) => {
+  app.post("/api/users/register", authRateLimit, async (req, res) => {
     try {
       // Validate request body
       const result = insertUserSchema.safeParse(req.body);
@@ -342,7 +368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users/login", async (req, res) => {
+  app.post("/api/users/login", authRateLimit, async (req, res) => {
     try {
       // Validate request body
       const result = loginSchema.safeParse(req.body);

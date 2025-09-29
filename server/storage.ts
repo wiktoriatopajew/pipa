@@ -49,24 +49,32 @@ export class MemStorage implements IStorage {
     this.chatSessions = new Map();
     this.messages = new Map();
     
-    // Create admin user with hashed password
+    // Create admin user from environment variables if provided
     this.initAdminUser();
   }
 
   private async initAdminUser() {
-    const hashedPassword = await bcrypt.hash("Xander12.", 12);
-    const adminUser: User = {
-      id: randomUUID(),
-      username: "admin",
-      password: hashedPassword,
-      email: "wiktoriatopajew@gmail.com",
-      isAdmin: true,
-      hasSubscription: true,
-      isOnline: false,
-      lastSeen: new Date(),
-      createdAt: new Date(),
-    };
-    this.users.set(adminUser.id, adminUser);
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    
+    if (adminEmail && adminPassword) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
+      const adminUser: User = {
+        id: randomUUID(),
+        username: "admin",
+        password: hashedPassword,
+        email: adminEmail,
+        isAdmin: true,
+        hasSubscription: true,
+        isOnline: false,
+        lastSeen: new Date(),
+        createdAt: new Date(),
+      };
+      this.users.set(adminUser.id, adminUser);
+      console.log(`Admin user created with email: ${adminEmail}`);
+    } else {
+      console.log("No admin credentials provided - admin user not created");
+    }
   }
 
   // User methods

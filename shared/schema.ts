@@ -47,6 +47,15 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
+}).extend({
+  password: z.string()
+    .min(8, "Password must be at least 8 characters long")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain at least one lowercase letter, one uppercase letter, and one number"),
+  email: z.string().email("Invalid email address").toLowerCase(),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters long")
+    .max(20, "Username must be no more than 20 characters long")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens")
 });
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
