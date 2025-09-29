@@ -572,6 +572,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's chat sessions
+  app.get("/api/chat/sessions", requireUser, async (req, res) => {
+    try {
+      const sessions = await storage.getUserChatSessions(req.user.id);
+
+      // Get preview message and computed data for each session
+      const sessionsWithPreviews = await Promise.all(
+        sessions.map(async (session) => {
+          const messages = await storage.getSessionMessages(session.id);
+          const lastMessage = messages[messages.length - 1];
+          
+          // Compute the actual last activity time
+          const computedLastActivity = new Date(Math.max(
+            new Date(session.lastActivity || session.createdAt).getTime(),
+            lastMessage ? new Date(lastMessage.createdAt).getTime() : 0,
+            new Date(session.createdAt).getTime()
+          ));
+
+          // Count unread messages from non-user senders
+          const unreadCount = messages.filter(msg => 
+            !msg.isRead && msg.senderType !== 'user'
+          ).length;
+          
+          return {
+            ...session,
+            lastActivity: computedLastActivity,
+            lastMessage: lastMessage ? {
+              content: lastMessage.content,
+              createdAt: lastMessage.createdAt,
+              senderType: lastMessage.senderType
+            } : null,
+            messageCount: messages.length,
+            unreadCount
+          };
+        })
+      );
+
+      // Sort by computed last activity (most recent first)
+      const sortedSessions = sessionsWithPreviews.sort((a, b) => {
+        return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+      });
+      
+      res.json(sortedSessions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch chat sessions" });
+    }
+  });
+
   app.get("/api/chat/sessions/:sessionId/messages", requireUser, async (req, res) => {
     try {
       const { sessionId } = req.params;
