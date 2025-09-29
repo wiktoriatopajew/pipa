@@ -60,8 +60,8 @@ export default function ChatInterface({
     },
     onError: () => {
       toast({
-        title: "Błąd wysyłania wiadomości",
-        description: "Spróbuj ponownie za chwilę",
+        title: "Error sending message",
+        description: "Please try again later",
         variant: "destructive",
       });
     },
@@ -85,7 +85,7 @@ export default function ChatInterface({
   };
 
   const formatTimestamp = (timestamp: Date) => {
-    return new Date(timestamp).toLocaleTimeString("pl-PL", { 
+    return new Date(timestamp).toLocaleTimeString("en-US", { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
@@ -96,17 +96,17 @@ export default function ChatInterface({
       <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Czat z Mechanikiem</span>
-            <Badge variant="outline">Wymagany dostęp</Badge>
+            <span>Chat with Mechanic</span>
+            <Badge variant="outline">Access Required</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="h-full flex flex-col items-center justify-center">
           <div className="text-center space-y-4">
             <Shield className="w-12 h-12 mx-auto text-muted-foreground" />
             <div>
-              <h3 className="font-semibold mb-2">Kup dostęp do czatu</h3>
+              <h3 className="font-semibold mb-2">Get Chat Access</h3>
               <p className="text-sm text-muted-foreground">
-                Za tylko 9.99 PLN otrzymasz 30-dniowy dostęp do bezpośredniego czatu z doświadczonym mechanikiem.
+                For just $9.99 get 30-day access to direct chat with an experienced mechanic.
               </p>
             </div>
           </div>
@@ -120,19 +120,19 @@ export default function ChatInterface({
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span>Czat z Mechanikiem</span>
+            <span>Chat with Mechanic</span>
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-sm text-muted-foreground">Administrator online</span>
+              <span className="text-sm text-muted-foreground">Admin online</span>
             </div>
           </div>
           <Badge variant="default">Premium</Badge>
         </CardTitle>
         {vehicleInfo && (
           <div className="text-sm text-muted-foreground">
-            Pojazd: {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model} ({vehicleInfo.type})
+            Vehicle: {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model} ({vehicleInfo.type})
             {vehicleInfo.issue && (
-              <div className="mt-1">Problem: {vehicleInfo.issue}</div>
+              <div className="mt-1">Issue: {vehicleInfo.issue}</div>
             )}
           </div>
         )}
@@ -143,8 +143,8 @@ export default function ChatInterface({
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <div className="space-y-2">
-                <p>Witaj! Jestem gotowy do pomocy z Twoim pojazdem.</p>
-                <p className="text-sm">Opisz swój problem, a postaram się jak najszybciej odpowiedzieć.</p>
+                <p>Hello! I'm ready to help with your vehicle.</p>
+                <p className="text-sm">Describe your problem and I'll try to respond as quickly as possible.</p>
               </div>
             </div>
           ) : (
@@ -167,11 +167,11 @@ export default function ChatInterface({
                   <div className="flex items-center space-x-2">
                     <Avatar className="w-6 h-6">
                       <AvatarFallback className="text-xs">
-                        {message.sender === "user" ? "Ty" : "M"}
+                        {message.sender === "user" ? "You" : "M"}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-xs opacity-70">
-                      {message.sender === "user" ? "Ty" : "Mechanik"}
+                      {message.sender === "user" ? "You" : "Mechanic"}
                     </span>
                     <span className="text-xs opacity-50 flex items-center">
                       <Clock className="w-3 h-3 mr-1" />
@@ -192,7 +192,7 @@ export default function ChatInterface({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Napisz swoją wiadomość..."
+              placeholder="Type your message..."
               disabled={sendMessageMutation.isPending}
               className="flex-1"
               data-testid="input-chat-message"

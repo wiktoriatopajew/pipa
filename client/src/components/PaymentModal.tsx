@@ -61,8 +61,8 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
     },
     onSuccess: (data) => {
       toast({
-        title: "Konto utworzone pomyślnie!",
-        description: "Masz teraz 30-dniowy dostęp do czatu z mechanikiem.",
+        title: "Account created successfully!",
+        description: "You now have 30-day access to chat with a mechanic.",
       });
       
       if (onPaymentSuccess && data) {
@@ -81,8 +81,8 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
     onError: (error: any) => {
       console.error('Account creation error:', error);
       toast({
-        title: "Błąd tworzenia konta",
-        description: error.message || "Spróbuj ponownie za chwilę",
+        title: "Account creation error",
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     },
@@ -91,8 +91,8 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
   const handlePayment = async () => {
     if (!email || !cardNumber || !expiryDate || !cvv) {
       toast({
-        title: "Wypełnij wszystkie pola",
-        description: "Wszystkie pola są wymagane",
+        title: "Fill all fields",
+        description: "All fields are required",
         variant: "destructive",
       });
       return;
@@ -107,16 +107,16 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
     setStep("account");
     
     toast({
-      title: "Płatność udana!",
-      description: "Teraz utwórz swoje konto",
+      title: "Payment successful!",
+      description: "Now create your account",
     });
   };
 
   const handleAccountSetup = () => {
     if (!username || !password || !confirmPassword) {
       toast({
-        title: "Wypełnij wszystkie pola",
-        description: "Wszystkie pola są wymagane",
+        title: "Fill all fields",
+        description: "All fields are required",
         variant: "destructive",
       });
       return;
@@ -124,8 +124,8 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
 
     if (password !== confirmPassword) {
       toast({
-        title: "Hasła nie pasują",
-        description: "Sprawdź poprawność hasła",
+        title: "Passwords don't match",
+        description: "Check password accuracy",
         variant: "destructive",
       });
       return;
@@ -133,8 +133,8 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
 
     if (password.length < 6) {
       toast({
-        title: "Hasło za krótkie",
-        description: "Hasło musi mieć co najmniej 6 znaków",
+        title: "Password too short",
+        description: "Password must be at least 6 characters",
         variant: "destructive",
       });
       return;
@@ -197,13 +197,13 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
               )}
             </div>
             <span>
-              {step === "payment" ? "Upgrade to Expert Chat" : "Utwórz swoje konto"}
+              {step === "payment" ? "Upgrade to Expert Chat" : "Create your account"}
             </span>
           </DialogTitle>
           <DialogDescription>
             {step === "payment" 
               ? "Get unlimited access to professional mechanics for just $9.99"
-              : "Ostatni krok - utwórz login i hasło do swojego konta"
+              : "Last step - create login and password for your account"
             }
           </DialogDescription>
         </DialogHeader>
@@ -218,25 +218,25 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
                     <span className="text-2xl font-bold">$9.99</span>
                     <Badge className="bg-success/20 text-success border-success/30">
                       <Star className="w-3 h-3 mr-1" />
-                      30 dni dostępu
+                      30 days access
                     </Badge>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-success" />
-                      <span>Bezpośredni czat z mechanikiem</span>
+                      <span>Direct chat with mechanic</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-success" />
-                      <span>Nielimitowane pytania</span>
+                      <span>Unlimited questions</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-success" />
-                      <span>Dostępność 24/7</span>
+                      <span>24/7 availability</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-success" />
-                      <span>Wszystkie typy pojazdów</span>
+                      <span>All vehicle types</span>
                     </div>
                   </div>
                 </div>
@@ -313,15 +313,15 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
               <div className="bg-success/10 border border-success/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 text-success">
                   <CheckCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">Płatność zakończona pomyślnie!</span>
+                  <span className="text-sm font-medium">Payment completed successfully!</span>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="username">Nazwa użytkownika</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  placeholder="twoja_nazwa"
+                  placeholder="your_username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   data-testid="input-username"
@@ -329,11 +329,11 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
               </div>
               
               <div>
-                <Label htmlFor="password">Hasło</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Minimum 6 znaków"
+                  placeholder="Minimum 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   data-testid="input-password"
@@ -341,11 +341,11 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
               </div>
               
               <div>
-                <Label htmlFor="confirmPassword">Potwierdź hasło</Label>
+                <Label htmlFor="confirmPassword">Confirm password</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Powtórz hasło"
+                  placeholder="Repeat password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   data-testid="input-confirm-password"
@@ -358,7 +358,7 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
                 className="w-full"
                 data-testid="button-create-account"
               >
-                {createAccountMutation.isPending ? "Tworzenie konta..." : "Utwórz konto i rozpocznij"}
+                {createAccountMutation.isPending ? "Creating account..." : "Create account and start"}
               </Button>
             </div>
           )}
@@ -366,7 +366,7 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
           {/* Security Badge */}
           <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
             <Shield className="w-4 h-4" />
-            <span>Bezpieczne szyfrowanie SSL 256-bit</span>
+            <span>Secure 256-bit SSL encryption</span>
           </div>
         </div>
       </DialogContent>

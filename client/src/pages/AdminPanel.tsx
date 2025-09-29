@@ -170,14 +170,14 @@ export default function AdminPanel() {
       setIsAuthenticated(false);
       setCredentials({ email: "", password: "" });
       toast({
-        title: "Wylogowano pomyślnie",
-        description: "Do zobaczenia!",
+        title: "Logged out successfully",
+        description: "See you!",
       });
     },
     onError: () => {
       toast({
-        title: "Błąd wylogowania",
-        description: "Spróbuj ponownie",
+        title: "Logout error",
+        description: "Please try again",
         variant: "destructive",
       });
     },
@@ -200,14 +200,14 @@ export default function AdminPanel() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pl-PL", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "PLN",
+      currency: "USD",
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("pl-PL");
+    return new Date(dateString).toLocaleString("en-US");
   };
 
   const getVehicleInfo = (vehicleInfoString?: string) => {
@@ -235,7 +235,7 @@ export default function AdminPanel() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Sprawdzanie uprawnień...</p>
+          <p>Checking permissions...</p>
         </div>
       </div>
     );
@@ -246,7 +246,7 @@ export default function AdminPanel() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
           <CardHeader>
-            <CardTitle className="text-center">Panel Administratora</CardTitle>
+            <CardTitle className="text-center">Admin Panel</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -258,19 +258,19 @@ export default function AdminPanel() {
                   onChange={(e) =>
                     setCredentials({ ...credentials, email: e.target.value })
                   }
-                  placeholder="wiktoriatopajew@gmail.com"
+                  placeholder="Enter admin email"
                   data-testid="input-admin-email"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Hasło:</label>
+                <label className="text-sm font-medium">Password:</label>
                 <Input
                   type="password"
                   value={credentials.password}
                   onChange={(e) =>
                     setCredentials({ ...credentials, password: e.target.value })
                   }
-                  placeholder="Xander12."
+                  placeholder="Enter admin password"
                   data-testid="input-admin-password"
                 />
               </div>
@@ -280,7 +280,7 @@ export default function AdminPanel() {
                 disabled={loginMutation.isPending}
                 data-testid="button-admin-login"
               >
-                {loginMutation.isPending ? "Logowanie..." : "Zaloguj się"}
+                {loginMutation.isPending ? "Logging in..." : "Log In"}
               </Button>
             </form>
           </CardContent>
@@ -294,14 +294,14 @@ export default function AdminPanel() {
       <div className="border-b bg-card/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Panel Administratora</h1>
+            <h1 className="text-2xl font-bold">Admin Panel</h1>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-sm">
                 <div className="w-2 h-2 bg-success rounded-full" />
                 <span>Online</span>
               </div>
               <Badge variant="secondary">
-                {liveData?.unreadCount || 0} nieprzeczytanych
+                {liveData?.unreadCount || 0} unread
               </Badge>
               <Button 
                 variant="outline" 
@@ -309,7 +309,7 @@ export default function AdminPanel() {
                 disabled={logoutMutation.isPending}
                 data-testid="button-admin-logout"
               >
-                {logoutMutation.isPending ? "Wylogowywanie..." : "Wyloguj"}
+                {logoutMutation.isPending ? "Logging out..." : "Log Out"}
               </Button>
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function AdminPanel() {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="chats" className="relative" data-testid="tab-chats">
-              Czaty
+              Chats
               {(liveData?.unreadCount || 0) > 0 && (
                 <Badge 
                   variant="destructive" 

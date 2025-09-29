@@ -34,13 +34,13 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
       setShowChat(false);
       toast({
-        title: "Wylogowano pomyślnie",
-        description: "Do zobaczenia wkrótce!",
+        title: "Logged out successfully",
+        description: "See you soon!",
       });
     },
     onError: () => {
       toast({
-        title: "Błąd wylogowania",
+        title: "Logout error",
         variant: "destructive",
       });
     },
