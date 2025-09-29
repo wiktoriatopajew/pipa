@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Circle } from "lucide-react";
+import { useMechanicsCount } from "@/hooks/useMechanicsCount";
 
 // Pool of realistic usernames that people actually use
 const MECHANIC_POOL = [
@@ -34,24 +35,23 @@ interface OnlineMechanicsProps {
 
 export default function OnlineMechanics({ className }: OnlineMechanicsProps) {
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
-  const [onlineCount, setOnlineCount] = useState(0);
+  const onlineCount = useMechanicsCount();
 
-  // Generate random mechanics list
+  // Generate random mechanics list that matches the global online count
   useEffect(() => {
     const generateMechanics = () => {
-      const count = Math.floor(Math.random() * 5) + 8; // 8-12 mechanics
+      const totalMechanics = Math.max(onlineCount + 2, 10); // Always show a few more than online count
       const shuffled = [...MECHANIC_POOL].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, count);
+      const selected = shuffled.slice(0, totalMechanics);
       
       const newMechanics = selected.map((username, index) => ({
         id: `mech-${index}`,
         username,
         responseTime: `${Math.floor(Math.random() * 3) + 1}-${Math.floor(Math.random() * 5) + 3} min`,
-        isOnline: Math.random() > 0.2 // 80% chance of being online
+        isOnline: index < onlineCount // First N mechanics are online to match global count
       }));
       
       setMechanics(newMechanics);
-      setOnlineCount(newMechanics.filter(m => m.isOnline).length);
     };
 
     generateMechanics();
@@ -60,7 +60,7 @@ export default function OnlineMechanics({ className }: OnlineMechanicsProps) {
     const interval = setInterval(generateMechanics, (Math.random() * 120 + 120) * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [onlineCount]); // Regenerate when online count changes
 
   return (
     <Card className={className}>

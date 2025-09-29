@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Wrench, Clock, Shield, Star } from "lucide-react";
 import heroImage from "@assets/stock_images/mechanic_garage_work_4757d5e8.jpg";
+import { useMechanicsCount } from "@/hooks/useMechanicsCount";
 
 interface HeroSectionProps {
   onStartChat?: () => void;
@@ -10,6 +11,7 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ onStartChat, onGetStarted }: HeroSectionProps) {
+  const onlineMechanicsCount = useMechanicsCount();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with gradient overlay */}
@@ -73,7 +75,7 @@ export default function HeroSection({ onStartChat, onGetStarted }: HeroSectionPr
             <div className="bg-gradient-to-r from-primary/20 to-warning/20 backdrop-blur rounded-2xl p-8 border border-primary/30">
               <div className="flex items-center justify-center space-x-2 mb-4">
                 <Clock className="w-5 h-5 text-success" />
-                <span className="text-success font-medium">8 mechanics online now</span>
+                <span className="text-success font-medium" data-testid="text-mechanics-online-count">{onlineMechanicsCount} mechanics online now</span>
               </div>
               <div className="space-y-4">
                 <div className="text-3xl font-bold">
