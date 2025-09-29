@@ -7,22 +7,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, Clock, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Pool of diverse random usernames for chat interactions
+// Pool of realistic usernames for chat interactions
 const CHAT_MECHANIC_NAMES = [
-  "alex23", "jamie_star", "chrisp", "morgan77", "riley_moon", "casey_blue",
-  "taylor93", "jordan_fire", "samwise", "blake_cool", "drew_sky", "quinn_one",
-  "avery_best", "harper22", "cameron_wave", "peyton_luz", "sage_green", "rowan_tree",
-  "dakota_wolf", "hayden_code", "phoenix_rise", "skylar_nova", "logan_bear", "parker_hill",
-  "reese_swift", "emery_gold", "finley_oak", "kendall_ruby", "marley_zen", "nova_bright",
-  "remy_snow", "sage_wind", "tatum_jazz", "wren_silk", "zion_coast", "emerson_ray",
-  "river_calm", "indigo_dream", "arbor_leaf", "cypress_sage", "atlas_peak", "echo_void",
-  "kai_ocean", "lane_storm", "nyx_shadow", "onyx_stone", "rain_drop", "storm_rider",
-  "vale_soft", "west_wild", "zen_master", "ash_smoke", "bay_breeze", "cruz_shine",
-  "dean_sharp", "ell_curve", "fox_red", "gray_mist", "hart_pulse", "ink_dark",
-  "jade_pure", "kira_light", "luna_glow", "max_power", "nico_flash", "ollie_jump",
-  "pete_rock", "quin_quick", "ruby_gem", "sky_high", "teo_warm", "una_pure",
-  "vex_cool", "wes_free", "xara_bright", "yuki_snow", "zara_star", "ace_king",
-  "bee_buzz", "cal_beach", "dex_smart", "eve_night", "fay_magic", "geo_map"
+  "alex2023", "mikesmith", "sarah_j", "johnnyboy", "lisa94", "davidk",
+  "jennifer88", "tomcat", "jessicab", "matty", "samantha", "robertj",
+  "emily22", "chrisw", "amanda99", "nickm", "stephh", "tylerg",
+  "ashley77", "brandonp", "nicole_c", "zachary", "kayla23", "anthonym",
+  "brittany", "joshd", "megan89", "kevins", "lindsey", "andrewt",
+  "rachael", "kyle94", "courtney", "ryanb", "ericka", "justinp",
+  "danielle", "adamw", "heather91", "seanm", "kristen", "coryj",
+  "shadowhunter", "nightwolf", "stormking", "dragonfly", "moonlight", "firestorm",
+  "thunderbolt", "wildcats", "steelwolf", "ironman77", "spidey", "batman2",
+  "superman94", "wonder_woman", "flash23", "greenlight", "aqua88", "cyber1",
+  "wolverine", "deadpool23", "captain99", "ironmaiden", "blackwidow", "hawkeye1",
+  "daredevil", "punisher", "ghostrider", "blade88", "gambit2", "rogue23"
 ];
 
 // Get a random mechanic name
