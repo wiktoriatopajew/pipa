@@ -7,7 +7,7 @@ import rateLimit from "express-rate-limit";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
+import { sendUserLoginNotification, sendFirstMessageNotification, sendSubsequentMessageNotification } from "./email";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -689,6 +689,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied to this chat session" });
       }
       
+      // Check if this is the first user message in this session
+      const existingMessages = await storage.getSessionMessages(sessionId);
+      const userMessages = existingMessages.filter(msg => msg.senderType === "user");
+      const isFirstMessage = userMessages.length === 0;
+      
       const message = await storage.createMessage({
         sessionId,
         senderId: req.user.id, // Use authenticated user ID from session
@@ -696,6 +701,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content,
         isRead: false
       });
+      
+      // Send email notifications if this is the first message
+      if (isFirstMessage) {
+        try {
+          const emailData = {
+            userEmail: req.user.email || 'unknown@email.com',
+            userName: req.user.username,
+            messageContent: content,
+            sessionId: sessionId,
+            isFirstMessage: true
+          };
+          
+          // Send first message notification
+          await sendFirstMessageNotification(emailData);
+          
+          // Schedule follow-up email after 5 minutes
+          scheduleFollowUpEmail(emailData);
+          
+          console.log('Email notifications sent for first message from user:', req.user.username);
+        } catch (emailError) {
+          // Log error but don't fail the message creation
+          console.error('Failed to send email notifications:', emailError);
+        }
+      }
       
       res.json(message);
     } catch (error) {

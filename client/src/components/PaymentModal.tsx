@@ -272,6 +272,33 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
           {/* Payment Form */}
           {step === "payment" && (
             <div className="space-y-4">
+              {/* Payment Method Selector */}
+              <div className="space-y-3">
+                <Label>Select Payment Method</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant={paymentMethod === "card" ? "default" : "outline"}
+                    className="flex items-center justify-center space-x-2"
+                    onClick={() => setPaymentMethod("card")}
+                    data-testid="button-select-card"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Credit Card</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={paymentMethod === "paypal" ? "default" : "outline"}
+                    className="flex items-center justify-center space-x-2"
+                    onClick={() => setPaymentMethod("paypal")}
+                    data-testid="button-select-paypal"
+                  >
+                    <SiPaypal className="w-4 h-4" />
+                    <span>PayPal</span>
+                  </Button>
+                </div>
+              </div>
+
               <div>
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -284,51 +311,78 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
                 />
               </div>
               
-              <div>
-                <Label htmlFor="cardNumber">Card Number</Label>
-                <Input
-                  id="cardNumber"
-                  placeholder="1234 5678 9012 3456"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                  maxLength={19}
-                  data-testid="input-card-number"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="expiryDate">Expiry Date</Label>
-                  <Input
-                    id="expiryDate"
-                    placeholder="MM/YY"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
-                    maxLength={5}
-                    data-testid="input-expiry"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="cvv">CVV</Label>
-                  <Input
-                    id="cvv"
-                    placeholder="123"
-                    value={cvv}
-                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').substring(0, 3))}
-                    maxLength={3}
-                    data-testid="input-cvv"
-                  />
-                </div>
-              </div>
+              {/* Credit Card Form */}
+              {paymentMethod === "card" && (
+                <>
+                  <div>
+                    <Label htmlFor="cardNumber">Card Number</Label>
+                    <Input
+                      id="cardNumber"
+                      placeholder="1234 5678 9012 3456"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                      maxLength={19}
+                      data-testid="input-card-number"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="expiryDate">Expiry Date</Label>
+                      <Input
+                        id="expiryDate"
+                        placeholder="MM/YY"
+                        value={expiryDate}
+                        onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
+                        maxLength={5}
+                        data-testid="input-expiry"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cvv">CVV</Label>
+                      <Input
+                        id="cvv"
+                        placeholder="123"
+                        value={cvv}
+                        onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').substring(0, 3))}
+                        maxLength={3}
+                        data-testid="input-cvv"
+                      />
+                    </div>
+                  </div>
 
-              <Button 
-                onClick={handlePayment}
-                disabled={isProcessing}
-                className="w-full"
-                data-testid="button-pay"
-              >
-                {isProcessing ? "Processing..." : "Pay $9.99"}
-              </Button>
+                  <Button 
+                    onClick={handlePayment}
+                    disabled={isProcessing}
+                    className="w-full"
+                    data-testid="button-pay"
+                  >
+                    {isProcessing ? "Processing..." : "Pay $9.99"}
+                  </Button>
+                </>
+              )}
+
+              {/* PayPal Form */}
+              {paymentMethod === "paypal" && email && (
+                <div className="space-y-3">
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Click the PayPal button below to complete your payment securely through PayPal.
+                    </p>
+                    <PayPalButton
+                      amount="9.99"
+                      currency="USD"
+                      intent="CAPTURE"
+                      onSuccess={handlePayPalSuccess}
+                      onError={handlePayPalError}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod === "paypal" && !email && (
+                <p className="text-sm text-muted-foreground">Please enter your email address first</p>
+              )}
             </div>
           )}
 
