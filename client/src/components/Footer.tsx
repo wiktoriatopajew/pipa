@@ -75,9 +75,9 @@ export default function Footer() {
             © 2024 ChatWithMechanic.com. All rights reserved.
           </div>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="/" className="hover:text-primary">Privacy Policy</Link>
-            <Link href="/" className="hover:text-primary">Terms of Service</Link>
-            <Link href="/" className="hover:text-primary">Refund Policy</Link>
+            <Link href="/privacy-policy" className="hover:text-primary" data-testid="link-footer-privacy">Privacy Policy</Link>
+            <Link href="/terms-of-service" className="hover:text-primary" data-testid="link-footer-terms">Terms of Service</Link>
+            <Link href="/refund-policy" className="hover:text-primary" data-testid="link-footer-refund">Refund Policy</Link>
           </div>
         </div>
       </div>

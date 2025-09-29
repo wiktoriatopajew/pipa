@@ -10,6 +10,9 @@ import Contact from "@/pages/Contact";
 import FAQ from "@/pages/FAQ";
 import HowItWorks from "@/pages/HowItWorks";
 import MechanicVerification from "@/pages/MechanicVerification";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
+import RefundPolicy from "@/pages/RefundPolicy";
 import CarsAndTrucks from "@/pages/vehicles/CarsAndTrucks";
 import Motorcycles from "@/pages/vehicles/Motorcycles";
 import BoatsAndWatercraft from "@/pages/vehicles/BoatsAndWatercraft";
@@ -28,6 +31,11 @@ function Router() {
       <Route path="/faq" component={FAQ} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/mechanic-verification" component={MechanicVerification} />
+      
+      {/* Legal Pages */}
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/refund-policy" component={RefundPolicy} />
       
       {/* Vehicle Type Pages */}
       <Route path="/vehicles/cars-trucks" component={CarsAndTrucks} />
