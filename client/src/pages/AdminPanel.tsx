@@ -54,12 +54,31 @@ interface Message {
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await apiRequest("GET", "/api/admin/dashboard");
+        if (response.ok) {
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
 
   // Login mutation
   const loginMutation = useMutation({
@@ -141,6 +160,29 @@ export default function AdminPanel() {
     },
   });
 
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/admin/logout");
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsAuthenticated(false);
+      setCredentials({ email: "", password: "" });
+      toast({
+        title: "Wylogowano pomyślnie",
+        description: "Do zobaczenia!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Błąd wylogowania",
+        description: "Spróbuj ponownie",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (credentials.email && credentials.password) {
@@ -187,6 +229,17 @@ export default function AdminPanel() {
       });
     }
   }, [messages, selectedChatId]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Sprawdzanie uprawnień...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -250,6 +303,14 @@ export default function AdminPanel() {
               <Badge variant="secondary">
                 {liveData?.unreadCount || 0} nieprzeczytanych
               </Badge>
+              <Button 
+                variant="outline" 
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                data-testid="button-admin-logout"
+              >
+                {logoutMutation.isPending ? "Wylogowywanie..." : "Wyloguj"}
+              </Button>
             </div>
           </div>
         </div>
@@ -258,8 +319,8 @@ export default function AdminPanel() {
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="chats" className="relative">
+            <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="chats" className="relative" data-testid="tab-chats">
               Czaty
               {(liveData?.unreadCount || 0) > 0 && (
                 <Badge 
@@ -270,8 +331,8 @@ export default function AdminPanel() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="users">Użytkownicy</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subskrypcje</TabsTrigger>
+            <TabsTrigger value="users" data-testid="tab-users">Użytkownicy</TabsTrigger>
+            <TabsTrigger value="subscriptions" data-testid="tab-subscriptions">Subskrypcje</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">

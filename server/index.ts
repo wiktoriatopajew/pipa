@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
-import { neonConfig, Pool } from "@neondatabase/serverless";
+import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -9,19 +8,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configure secure session management
-const pgSession = connectPgSimple(session);
-neonConfig.useSecureWebSocket = false;
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// Configure secure session management with memory store for development
+const MemoryStoreSession = MemoryStore(session);
 
 app.use(session({
-  store: new pgSession({
-    pool: pool,
-    tableName: 'user_sessions',
-    createTableIfMissing: true,
+  store: new MemoryStoreSession({
+    checkPeriod: 86400000, // prune expired entries every 24h
   }),
   secret: process.env.SESSION_SECRET || 'dev-secret-please-change-in-production',
   resave: false,
