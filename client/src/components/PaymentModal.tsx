@@ -11,7 +11,6 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PayPalButton from "@/components/PayPalButton";
-import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 interface PaymentModalProps {
@@ -82,14 +81,15 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
   const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal">("card");
   const [clientSecret, setClientSecret] = useState("");
   const [email, setEmail] = useState("");
-  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [stripeInstance, setStripeInstance] = useState<any>(null);
   const [paymentId, setPaymentId] = useState<string>("");
 
-  // Initialize Stripe - reference: blueprint:javascript_stripe
+  // Initialize Stripe from global window.Stripe
   useEffect(() => {
     const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-    if (stripePublicKey) {
-      setStripePromise(loadStripe(stripePublicKey));
+    if (stripePublicKey && (window as any).Stripe) {
+      const stripe = (window as any).Stripe(stripePublicKey);
+      setStripeInstance(stripe);
     }
   }, []);
   
@@ -373,7 +373,7 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
               </div>
               
               {/* Stripe Credit Card Form */}
-              {paymentMethod === "card" && email && !stripePromise && (
+              {paymentMethod === "card" && email && !stripeInstance && (
                 <div className="p-4 border rounded-lg bg-destructive/10 border-destructive/20">
                   <p className="text-sm text-destructive">
                     Stripe is not configured. Please add VITE_STRIPE_PUBLIC_KEY to your environment.
@@ -381,13 +381,13 @@ export default function PaymentModal({ open, onOpenChange, onPaymentSuccess }: P
                 </div>
               )}
 
-              {paymentMethod === "card" && email && stripePromise && clientSecret && (
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
+              {paymentMethod === "card" && email && stripeInstance && clientSecret && (
+                <Elements stripe={stripeInstance} options={{ clientSecret }}>
                   <StripeCheckoutForm onSuccess={handleStripeSuccess} email={email} />
                 </Elements>
               )}
 
-              {paymentMethod === "card" && email && stripePromise && !clientSecret && (
+              {paymentMethod === "card" && email && stripeInstance && !clientSecret && (
                 <div className="flex items-center justify-center p-4">
                   <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
                 </div>
