@@ -235,8 +235,29 @@ export default function Home() {
                   onStartNewChat={handleStartNewChat}
                 />
               </div>
-              <div>
+              <div className="space-y-6">
                 <OnlineMechanics />
+                
+                {/* Continue Chat Button */}
+                {hasAccess && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Active Session</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        You have an active chat session. Continue your conversation with a mechanic.
+                      </p>
+                      <Button 
+                        className="w-full" 
+                        onClick={handleStartChat}
+                        data-testid="button-continue-chat"
+                      >
+                        Continue Chat
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </div>

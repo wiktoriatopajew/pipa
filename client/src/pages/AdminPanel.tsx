@@ -551,7 +551,7 @@ export default function AdminPanel() {
           </TabsContent>
 
           <TabsContent value="chats" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ height: 'calc(100vh - 250px)' }}>
               {/* Chat Sessions List */}
               <Card>
                 <CardHeader>
@@ -627,9 +627,9 @@ export default function AdminPanel() {
               </Card>
 
               {/* Chat Messages */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 h-full">
                 {selectedChatId ? (
-                  <Card className="h-full">
+                  <Card className="h-full flex flex-col">
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span>Konwersacja</span>
