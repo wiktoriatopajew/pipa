@@ -1,0 +1,245 @@
+import { Helmet } from "react-helmet-async";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Footer from "@/components/Footer";
+import { Link } from "wouter";
+import { Car, ClipboardList, CreditCard, MessageCircle, CheckCircle, Upload, Clock } from "lucide-react";
+
+export default function HowItWorks() {
+  return (
+    <>
+      <Helmet>
+        <title>How It Works - Professional Automotive Consultation Process | ChatWithMechanic.com</title>
+        <meta name="description" content="Learn how ChatWithMechanic.com works. Simple 3-step process: fill vehicle info, pay $9.99, chat with certified mechanics. Get instant automotive advice with file upload support in minutes." />
+        <meta name="keywords" content="how it works, automotive consultation process, mechanic chat steps, vehicle repair help, online automotive advice, car problem diagnosis" />
+        
+        {/* Open Graph tags */}
+        <meta property="og:title" content="How It Works - Professional Automotive Consultation Process" />
+        <meta property="og:description" content="Simple 3-step process to get professional automotive advice. Fill vehicle info, pay $9.99, chat with certified mechanics instantly." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://chatwithmechanic.com/how-it-works" />
+        
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="How It Works - Automotive Consultation Process" />
+        <meta name="twitter:description" content="Learn how to get instant professional automotive advice through our simple 3-step process." />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b border-border">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
+              <Car className="h-8 w-8 text-primary" />
+              <span className="text-xl font-bold">ChatWithMechanic</span>
+            </Link>
+            <nav className="flex space-x-6">
+              <Link href="/" className="hover:text-primary" data-testid="link-home-nav">Home</Link>
+              <Link href="/contact" className="hover:text-primary" data-testid="link-contact">Contact</Link>
+            </nav>
+          </div>
+        </header>
+
+        {/* Hero Section */}
+        <section className="py-20 px-4">
+          <div className="container mx-auto text-center">
+            <div className="flex justify-center mb-6">
+              <ClipboardList className="h-16 w-16 text-primary" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              How It Works
+            </h1>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-4xl mx-auto">
+              Get professional automotive advice in just three simple steps. 
+              Connect with certified mechanics instantly and solve your vehicle problems quickly.
+            </p>
+          </div>
+        </section>
+
+        {/* Process Steps */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-16">
+              Simple 3-Step Process
+            </h2>
+            
+            <div className="grid lg:grid-cols-3 gap-8 mb-16">
+              {/* Step 1 */}
+              <Card className="hover-elevate relative">
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  1
+                </div>
+                <CardContent className="p-8 text-center">
+                  <ClipboardList className="h-16 w-16 text-primary mx-auto mb-6" />
+                  <h3 className="text-2xl font-semibold mb-4">Fill Vehicle Information</h3>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Tell us about your vehicle - make, model, year, engine type, and describe the issue you're experiencing. 
+                    This helps our mechanics understand your specific situation.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Step 2 */}
+              <Card className="hover-elevate relative">
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  2
+                </div>
+                <CardContent className="p-8 text-center">
+                  <CreditCard className="h-16 w-16 text-primary mx-auto mb-6" />
+                  <h3 className="text-2xl font-semibold mb-4">Secure Payment</h3>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Pay just $9.99 for 30 days of unlimited access to our certified mechanics. 
+                    Secure payment processing with industry-standard encryption for your protection.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Step 3 */}
+              <Card className="hover-elevate relative">
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  3
+                </div>
+                <CardContent className="p-8 text-center">
+                  <MessageCircle className="h-16 w-16 text-primary mx-auto mb-6" />
+                  <h3 className="text-2xl font-semibold mb-4">Chat with Experts</h3>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Instantly connect with certified mechanics who specialize in your vehicle type. 
+                    Get professional advice, diagnostic help, and repair guidance in real-time.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="py-16 px-4 bg-card/50">
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">
+              What You Get
+            </h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <Card className="hover-elevate">
+                <CardContent className="p-6 text-center">
+                  <Upload className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-3">File Upload Support</h3>
+                  <p className="text-muted-foreground">
+                    Upload photos and videos of your vehicle issues to help mechanics provide more accurate diagnostics.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate">
+                <CardContent className="p-6 text-center">
+                  <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-3">24/7 Availability</h3>
+                  <p className="text-muted-foreground">
+                    Access certified mechanics any time of day or night, including weekends and holidays.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate">
+                <CardContent className="p-6 text-center">
+                  <CheckCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-3">Unlimited Consultations</h3>
+                  <p className="text-muted-foreground">
+                    Ask as many questions as needed for 30 days. No limits on chat sessions or follow-up questions.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate">
+                <CardContent className="p-6 text-center">
+                  <MessageCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-3">Real-Time Chat</h3>
+                  <p className="text-muted-foreground">
+                    Instant messaging with certified mechanics - no waiting for email responses or scheduled calls.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Vehicle Types */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">
+              All Vehicle Types Supported
+            </h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 text-center">
+              <Link href="/vehicles/cars-trucks" className="hover:text-primary" data-testid="link-cars-trucks">
+                <Card className="hover-elevate cursor-pointer">
+                  <CardContent className="p-6">
+                    <Car className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <h3 className="font-semibold">Cars & Trucks</h3>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/vehicles/motorcycles" className="hover:text-primary" data-testid="link-motorcycles">
+                <Card className="hover-elevate cursor-pointer">
+                  <CardContent className="p-6">
+                    <Car className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <h3 className="font-semibold">Motorcycles</h3>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/vehicles/boats-watercraft" className="hover:text-primary" data-testid="link-boats">
+                <Card className="hover-elevate cursor-pointer">
+                  <CardContent className="p-6">
+                    <Car className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <h3 className="font-semibold">Boats & Watercraft</h3>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/vehicles/buses" className="hover:text-primary" data-testid="link-buses">
+                <Card className="hover-elevate cursor-pointer">
+                  <CardContent className="p-6">
+                    <Car className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <h3 className="font-semibold">Buses</h3>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/vehicles/construction-equipment" className="hover:text-primary" data-testid="link-construction">
+                <Card className="hover-elevate cursor-pointer">
+                  <CardContent className="p-6">
+                    <Car className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <h3 className="font-semibold">Construction Equipment</h3>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 px-4 bg-primary/10">
+          <div className="container mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">
+              Ready to Get Started?
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Join thousands of vehicle owners who trust ChatWithMechanic for reliable automotive advice. 
+              Get started now and solve your vehicle problems today.
+            </p>
+            <Link href="/" data-testid="button-start-now">
+              <Button size="lg" className="text-lg px-8 py-3">
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Start Your Consultation - $9.99
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        <Footer />
+      </div>
+    </>
+  );
+}

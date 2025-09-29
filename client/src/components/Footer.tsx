@@ -21,8 +21,8 @@ export default function Footer() {
             </p>
             <div className="flex items-center space-x-2 text-sm">
               <Mail className="w-4 h-4 text-primary" />
-              <a href="mailto:contact@chatwithmechanic.com" className="text-muted-foreground hover:text-primary">
-                contact@chatwithmechanic.com
+              <a href="mailto:support@chatwithmechanic.com" className="text-muted-foreground hover:text-primary" data-testid="link-footer-email">
+                support@chatwithmechanic.com
               </a>
             </div>
           </div>
@@ -31,11 +31,11 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Vehicle Types</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/" className="hover:text-primary">Cars & Trucks</Link></li>
-              <li><Link href="/" className="hover:text-primary">Motorcycles</Link></li>
-              <li><Link href="/" className="hover:text-primary">Boats & Watercraft</Link></li>
-              <li><Link href="/" className="hover:text-primary">Buses</Link></li>
-              <li><Link href="/" className="hover:text-primary">Construction Equipment</Link></li>
+              <li><Link href="/vehicles/cars-trucks" className="hover:text-primary" data-testid="link-footer-cars-trucks">Cars & Trucks</Link></li>
+              <li><Link href="/vehicles/motorcycles" className="hover:text-primary" data-testid="link-footer-motorcycles">Motorcycles</Link></li>
+              <li><Link href="/vehicles/boats-watercraft" className="hover:text-primary" data-testid="link-footer-boats">Boats & Watercraft</Link></li>
+              <li><Link href="/vehicles/buses" className="hover:text-primary" data-testid="link-footer-buses">Buses</Link></li>
+              <li><Link href="/vehicles/construction-equipment" className="hover:text-primary" data-testid="link-footer-construction">Construction Equipment</Link></li>
             </ul>
           </div>
 
@@ -43,10 +43,10 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Support</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/contact" className="hover:text-primary">Contact Us</Link></li>
-              <li><Link href="/" className="hover:text-primary">FAQ</Link></li>
-              <li><Link href="/" className="hover:text-primary">How It Works</Link></li>
-              <li><Link href="/" className="hover:text-primary">Mechanic Verification</Link></li>
+              <li><Link href="/contact" className="hover:text-primary" data-testid="link-footer-contact">Contact Us</Link></li>
+              <li><Link href="/faq" className="hover:text-primary" data-testid="link-footer-faq">FAQ</Link></li>
+              <li><Link href="/how-it-works" className="hover:text-primary" data-testid="link-footer-how-it-works">How It Works</Link></li>
+              <li><Link href="/mechanic-verification" className="hover:text-primary" data-testid="link-footer-verification">Mechanic Verification</Link></li>
             </ul>
           </div>
 
