@@ -22,16 +22,10 @@ const MECHANIC_POOL = [
   "bee_buzz", "cal_beach", "dex_smart", "eve_night", "fay_magic", "geo_map"
 ];
 
-// Vehicle specialties for mechanics
-const SPECIALTIES = [
-  "Cars", "Motorcycles", "Boats", "Buses", "Trucks", "Construction Equipment",
-  "Diesel Engines", "Electrical Systems", "Transmissions", "Brakes", "Engine Repair"
-];
 
 interface Mechanic {
   id: string;
   username: string;
-  specialty: string;
   responseTime: string;
   isOnline: boolean;
 }
@@ -54,7 +48,6 @@ export default function OnlineMechanics({ className }: OnlineMechanicsProps) {
       const newMechanics = selected.map((username, index) => ({
         id: `mech-${index}`,
         username,
-        specialty: SPECIALTIES[Math.floor(Math.random() * SPECIALTIES.length)],
         responseTime: `${Math.floor(Math.random() * 3) + 1}-${Math.floor(Math.random() * 5) + 3} min`,
         isOnline: Math.random() > 0.2 // 80% chance of being online
       }));
@@ -104,9 +97,6 @@ export default function OnlineMechanics({ className }: OnlineMechanicsProps) {
                 <div>
                   <div className="font-medium text-sm" data-testid={`text-username-${mechanic.id}`}>
                     {mechanic.username}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {mechanic.specialty}
                   </div>
                 </div>
               </div>
