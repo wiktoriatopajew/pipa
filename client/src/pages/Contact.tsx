@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import LoginModal from "@/components/LoginModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +14,7 @@ import { Link } from "wouter";
 import { Mail, MessageCircle, Clock, MapPin } from "lucide-react";
 
 export default function Contact() {
+  const [showLogin, setShowLogin] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -44,6 +47,17 @@ export default function Contact() {
     logoutMutation.mutate();
   };
 
+  const handleLogin = () => {
+    setShowLogin(true);
+  };
+
+  const handleLoginSuccess = () => {
+    toast({
+      title: "Welcome!",
+      description: "You're now logged in and can access our services.",
+    });
+  };
+
   return (
     <>
       <Helmet>
@@ -64,7 +78,7 @@ export default function Contact() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <Header user={user as any} onLogin={() => {}} onLogout={handleLogout} />
+        <Header user={user as any} onLogin={handleLogin} onLogout={handleLogout} />
 
         {/* Hero Section */}
         <section className="py-20 px-4">
@@ -225,6 +239,12 @@ export default function Contact() {
         </section>
 
         <Footer />
+        
+        <LoginModal 
+          open={showLogin}
+          onOpenChange={setShowLogin}
+          onLoginSuccess={handleLoginSuccess}
+        />
       </div>
     </>
   );

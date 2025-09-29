@@ -9,6 +9,7 @@ import OnlineMechanics from "@/components/OnlineMechanics";
 import VehicleSelector from "@/components/VehicleSelector";
 import ChatInterface from "@/components/ChatInterface";
 import PaymentModal from "@/components/PaymentModal";
+import LoginModal from "@/components/LoginModal";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function Home() {
   const [showPayment, setShowPayment] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [vehicleInfo, setVehicleInfo] = useState<any>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [, navigate] = useLocation();
@@ -63,6 +65,19 @@ export default function Home() {
     navigate('/faq');
   };
 
+  const handleLogin = () => {
+    setShowLogin(true);
+  };
+
+  const handleLoginSuccess = () => {
+    // User is now logged in, they can continue using the app
+    // The user query will automatically refresh due to React Query
+    toast({
+      title: "Welcome!",
+      description: "You're now logged in. You can purchase chat access to start consulting with mechanics.",
+    });
+  };
+
   // Check if user has active subscription
   const hasAccess = (user as any)?.hasSubscription || false;
 
@@ -91,7 +106,7 @@ export default function Home() {
   if (showChat) {
     return (
       <div className="min-h-screen bg-background">
-        <Header user={user as any} onLogin={() => {}} onLogout={handleLogout} />
+        <Header user={user as any} onLogin={handleLogin} onLogout={handleLogout} />
         
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-6">
@@ -140,7 +155,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user as any} onLogin={() => {}} onLogout={handleLogout} />
+      <Header user={user as any} onLogin={handleLogin} onLogout={handleLogout} />
       
       <HeroSection 
         onStartChat={handleScrollToVehicleSelector}
@@ -174,6 +189,12 @@ export default function Home() {
         open={showPayment}
         onOpenChange={setShowPayment}
         onPaymentSuccess={handlePaymentSuccess}
+      />
+      
+      <LoginModal 
+        open={showLogin}
+        onOpenChange={setShowLogin}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );
